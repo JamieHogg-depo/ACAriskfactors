@@ -13,15 +13,18 @@ library(readxl)
 rm(list = ls())
 
 base_folder <- "C:/r_proj/ACAriskfactors/out"
-export <- TRUE
+export <- FALSE
 
 ## Functions ## ----------------------------------------------------------------
 
 source('C:/r_proj/ACAriskfactors/src/functions_ALL.R')
 
-jsave <- function(filename, square = T, square_size = 5000, ratio = c(6,9)){
+jsave <- function(filename, plot = last_plot(), 
+                  square = T, square_size = 5000, 
+                  ratio = c(6,9)){
   if(square){
     ggsave(filename = filename,
+           plot = plot,
            path = base_folder,
            dpi = 1000,
            width = square_size,
@@ -33,6 +36,7 @@ jsave <- function(filename, square = T, square_size = 5000, ratio = c(6,9)){
     a <- sqrt((total*ratio[1])/ratio[2])
     b <- (ratio[2]*a)/ratio[1]
     ggsave(filename = filename,
+           plot = plot, 
            path = base_folder,
            dpi = 1000,
            width = round(b),
@@ -49,6 +53,46 @@ make_numeric_decimal <- function(.data){
   return(df)
 }
 
+addBoxLabel <- function(i, color = "white", size = 0.5){
+  if(lims$position[i] == "r"){
+    list(
+      annotate("rect", 
+               xmin = lims$xmin[i], xmax = lims$xmax[i],
+               ymin = lims$ymin[i], ymax = lims$ymax[i],
+               color = color, fill = NA, size = size),
+      annotate("text", y = mean(c(lims$ymin[i], lims$ymax[i])), 
+               x = lims$xmax[i] + 1, label = lims$initials[i]) 
+    )
+  } else if(lims$position[i] == "b"){
+    list(
+      annotate("rect", 
+               xmin = lims$xmin[i], xmax = lims$xmax[i],
+               ymin = lims$ymin[i], ymax = lims$ymax[i],
+               color = color, fill = NA, size = size),
+      annotate("text", x = mean(c(lims$xmin[i], lims$xmax[i])), 
+               y = lims$ymin[i] - 1, label = lims$initials[i]) 
+    )
+  } else if(lims$position[i] == "l"){
+    list(
+      annotate("rect", 
+               xmin = lims$xmin[i], xmax = lims$xmax[i],
+               ymin = lims$ymin[i], ymax = lims$ymax[i],
+               color = color, fill = NA, size = size),
+      annotate("text", y = mean(c(lims$ymin[i], lims$ymax[i])), 
+               x = lims$xmin[i] - 1, label = lims$initials[i]) 
+    )
+  }else{
+    list(
+      annotate("rect", 
+               xmin = lims$xmin[i], xmax = lims$xmax[i],
+               ymin = lims$ymin[i], ymax = lims$ymax[i],
+               color = color, fill = NA, size = size),
+      annotate("text", x = mean(c(lims$xmin[i], lims$xmax[i])), 
+               y = lims$ymax[i] + 1, label = lims$initials[i]) 
+    )
+  }
+}
+
 ## Load Data ## ----------------------------------------------------------------
 
 # Load modelled results
@@ -56,18 +100,13 @@ b_est <- readRDS("C:/r_proj/ACAriskfactors/data/sf_list_bench.rds")
 nb_est <- readRDS("C:/r_proj/ACAriskfactors/data/sf_list_nobench.rds")
 
 # Load map
-map_sa2 <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
-  filter(STATE_CODE %in% c("8", "1", "3", "2")) %>% 
+map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
   mutate(SA2 = as.numeric(SA2_MAIN16)) %>% 
+  filter(!str_detect(SA2_NAME, "Island")) %>% 
+  filter(STATE_NAME != "Other Territories")
+map_sa2 <- map_sa2_full %>%  
+  filter(STATE_CODE %in% c("8", "1", "3", "2")) %>% 
   left_join(.,b_est$area_concor, by = "SA2")
-  
-# get overlap
-state_overlay <- map_sa2 %>% 
-  mutate(state = str_sub(SA2, 1, 1)) %>% 
-  group_by(state) %>% 
-  summarise(geometry = st_union(geometry)) %>% 
-  st_as_sf() %>%
-  st_transform(4326)
 
 # Load remoteness
 ra1 <- read_csv("C:/r_proj/ACAriskfactors/data/aust_ASGS2016_sa2_detls.csv") %>% dplyr::select(-1)
@@ -94,15 +133,6 @@ irsd <- read_excel("C:/r_proj/ACAriskfactors/data/irsd.xlsx") %>%
 # Create aux
 aux2 <- inner_join(ra, irsd, by = "SA2") %>% 
   left_join(.,b_est$area_concor, by = "SA2")
-
-# create shapefile
-b_est$summ_mu %>% 
-  filter(model == "TSLN") %>% 
-  left_join(.,map_sa2, by = "ps_area") %>% 
-  left_join(.,inner_join(ra, irsd, by = "SA2"), by = "SA2") %>% 
-  st_as_sf() %>%
-  st_transform(4326) %>% 
-  st_write(., "C:/r_proj/ACAriskfactors/data/summ_mu_shapefile/summ_mu_shapefile.shp")
 
 ## Other code ## --------------------------------------------------------------
 
@@ -150,7 +180,9 @@ lims <- data.frame(
   xmax = c(153.6, 151.35, 145.5, 116.45, 139.1, 147.8, 149.6, 131.3),
   ymin = -c(28, 34.4, 38.4, 32.5, 35.4, 43.4, 35.8, 13),
   ymax = -c(27, 33.4, 37.4, 31.5, 34.4, 42.4, 34.8, 12),
-  city = c("Brisbane", "Sydney", "Melbourne", "Perth", "Adelaide", "Hobart", "Canberra", "Darwin")
-)
+  city = c("Brisbane", "Sydney", "Melbourne", "Perth", "Adelaide", "Hobart", "Canberra", "Darwin"),
+  position = c("r", "r", "b", "l", "b", "b", "r", "l")
+) %>% 
+  mutate(initials = str_sub(city, 1, 1))
 
 ## END SCRIPT ## --------------------------------------------------------------

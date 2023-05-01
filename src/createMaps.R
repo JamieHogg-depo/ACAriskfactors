@@ -60,22 +60,92 @@ mapping_data <- b_est$summ_mu %>%
   left_join(.,map_sa2, by = "ps_area") %>%
   bind_rows(mis_geos) %>% 
   st_as_sf() %>%
-  st_transform(4326)
+  st_transform(4326) %>% 
+  # filter single model
+  filter(model == "TSLN")
 
 # Create base map for prevalence
-(bm_mu <- mapping_data %>% 
+(base_mu <- mapping_data %>% 
     filter(model != "Direct") %>% 
     ggplot(aes(fill = median))+
     theme_void()+
     geom_sf(col = NA)+
     geom_sf(data = state_overlay, aes(geometry = geometry), 
             colour = "black", fill = NA, size = 0.3)+
-    facet_grid(.~model)+
     scale_fill_viridis_c(begin = 0, end = 1, 
                          direction = -1,
                          option = "B")+
     labs(fill = "Proportion")+
-    theme(legend.position = "right", legend.key.height = unit(0.5, "cm")))
+    guides(fill = guide_colourbar(barwidth = 20))+
+    theme(legend.position = "bottom"))
+
+## TEMPORARY INSET MAP OF AUSTRALIA ## -----------------------------------------
+
+# Australia outline
+aus_border <- map_sa2_full %>% 
+  summarise(geometry = st_union(geometry)) %>% 
+  st_as_sf() %>%
+  st_transform(4326)
+
+# State outline
+state_border <- map_sa2_full %>% 
+  mutate(state = str_sub(SA2, 1, 1)) %>% 
+  group_by(state, STATE_NAME) %>% 
+  summarise(geometry = st_union(geometry), .groups = "drop") %>% 
+  mutate(st_init = c("NSW", "VIC", "QLD", "SA", "WA", NA, "NT", NA)) %>% 
+  st_as_sf() %>%
+  st_transform(4326)
+
+# base map
+base_mu <- map_sa2_full %>% 
+  mutate(y = runif(nrow(.))) %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = y), col = NA)+
+  scale_fill_viridis_c(begin = 0, end = 1, 
+                       direction = -1,
+                       option = "B")+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none")
+
+# Base map with legend
+base_mu_legend <- base_mu +
+  geom_sf_label(data = state_border, 
+                aes(geometry = geometry, label = st_init))+
+  labs(fill = "Proportion")+
+  guides(fill = guide_colourbar(barwidth = 15, 
+                                title.position = "bottom",
+                                title.hjust = 0.5))+
+  theme(legend.position = "bottom")
+
+# Base map with boxes
+base_mu_boxes <- base_mu_legend
+for(i in 1:8){
+  base_mu_boxes <- base_mu_boxes + addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base_mu +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    ggtitle(label = lims$initials[i])
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,1,1,1,1,7))
+full_inset_plt <- grid.arrange(grobs = c(list(base_mu_boxes), inset_list), layout_matrix  = lay)
+jsave("this_plot.png", plot = full_inset_plt, square = F)
+
+## LEGACY - LEFT OVER ## -------------------------------------------------------
 
 # Create base map for CI prevalence
 (bm_muci <- mapping_data %>% 
@@ -85,7 +155,7 @@ mapping_data <- b_est$summ_mu %>%
     geom_sf(col = NA)+
     geom_sf(data = state_overlay, aes(geometry = geometry), 
             colour = "black", fill = NA, size = 0.3)+
-    facet_grid(.~model)+
+    #facet_grid(.~model)+
     scale_fill_viridis_c(begin = 0, end = 0.8, 
                          direction = -1,
                          option = "D")+
