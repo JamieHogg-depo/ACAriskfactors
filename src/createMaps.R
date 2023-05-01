@@ -109,22 +109,24 @@ base_mu <- map_sa2_full %>%
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.1)+
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        text = element_text(size = 4),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
 
 # Base map with legend
-base_mu_legend <- base_mu +
-  geom_sf_label(data = state_border, 
-                aes(geometry = geometry, label = st_init))+
+(base_mu_legend <- base_mu +
   labs(fill = "Proportion")+
   guides(fill = guide_colourbar(barwidth = 15, 
-                                title.position = "bottom",
+                                title.position = "top",
                                 title.hjust = 0.5))+
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom"))
 
 # Base map with boxes
 base_mu_boxes <- base_mu_legend
 for(i in 1:8){
-  base_mu_boxes <- base_mu_boxes + addBoxLabel(i, color = "black", size = 0.2)
+  base_mu_boxes <- base_mu_boxes + 
+    addBoxLabel(i, color = "green", size = 0.2)
 }
 
 # Create list of insets
@@ -133,7 +135,10 @@ for(i in 1:8){
   inset_list[[i]] <- base_mu +
     xlim(lims$xmin[i], lims$xmax[i]) +
     ylim(lims$ymin[i], lims$ymax[i]) +
-    ggtitle(label = lims$initials[i])
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0)),
+          plot.margin = unit(c(1,1,1,1), "mm"))
 }
 inset_list <- Filter(Negate(is.null), inset_list)
 

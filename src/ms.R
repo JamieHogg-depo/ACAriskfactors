@@ -10,6 +10,7 @@ library(MASS)
 library(patchwork)
 library(readr)
 library(readxl)
+library(gridExtra)
 rm(list = ls())
 
 base_folder <- "C:/r_proj/ACAriskfactors/out"
@@ -61,7 +62,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", y = mean(c(lims$ymin[i], lims$ymax[i])), 
-               x = lims$xmax[i] + 1, label = lims$initials[i]) 
+               x = lims$xmax[i] + 1, label = lims$initials[i],
+               size = 3) 
     )
   } else if(lims$position[i] == "b"){
     list(
@@ -70,7 +72,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", x = mean(c(lims$xmin[i], lims$xmax[i])), 
-               y = lims$ymin[i] - 1, label = lims$initials[i]) 
+               y = lims$ymin[i] - 1, label = lims$initials[i],
+               size = 3) 
     )
   } else if(lims$position[i] == "l"){
     list(
@@ -79,7 +82,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", y = mean(c(lims$ymin[i], lims$ymax[i])), 
-               x = lims$xmin[i] - 1, label = lims$initials[i]) 
+               x = lims$xmin[i] - 1, label = lims$initials[i],
+               size = 3) 
     )
   }else{
     list(
@@ -88,7 +92,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", x = mean(c(lims$xmin[i], lims$xmax[i])), 
-               y = lims$ymax[i] + 1, label = lims$initials[i]) 
+               y = lims$ymax[i] + 1, label = lims$initials[i],
+               size = 3) 
     )
   }
 }
@@ -181,7 +186,11 @@ lims <- data.frame(
   ymin = -c(28, 34.4, 38.4, 32.5, 35.4, 43.4, 35.8, 13),
   ymax = -c(27, 33.4, 37.4, 31.5, 34.4, 42.4, 34.8, 12),
   city = c("Brisbane", "Sydney", "Melbourne", "Perth", "Adelaide", "Hobart", "Canberra", "Darwin"),
-  position = c("r", "r", "b", "l", "b", "b", "r", "l")
+  position = c("r", "r", "b", "l", "b", "b", "r", "l"),
+  inset_labs = c("B - Brisbane (Qld)", "S - Sydney (NSW)",
+                 "M - Melbourne (Vic)", "P - Perth (WA)",
+                 "A - Adelaide (SA)", "H - Hobart (Tas)",
+                 "C - Canberra (ACT)", "D - Darwin (NT)")
 ) %>% 
   mutate(initials = str_sub(city, 1, 1))
 
