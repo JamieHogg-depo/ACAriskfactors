@@ -129,6 +129,9 @@ names(raw_est) <- str_remove(
 # Model building
 model_building <- lapply(list.files("data/2021-033_o_0002a_cleared", 
                              pattern = "model_building_*", full.names = T), readRDS)
+names(model_building) <- str_remove( 
+  str_remove(
+    list.files("data/2021-033_o_0002a_cleared", pattern = "model_building_*"), "model_building_"), ".rds")
 
 # Load map
 map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
