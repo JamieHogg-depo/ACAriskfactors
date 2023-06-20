@@ -3,7 +3,11 @@
 ## ----------------------------------------------------------------------------
 
 ## ----------------------------------------------------------------------------
-#dataDict <- readRDS("P:/R Projects/functions/dataDict.rds")
+nicetitle <- function(input){
+  wrapped <- paste0("## ", input, " ##")
+  nu_lines <- 80 - str_length(wrapped)
+  message(paste0(wrapped, paste0(rep("-", nu_lines), collapse = "")))
+}
 
 ## ----------------------------------------------------------------------------
 #' @param dataset
@@ -81,12 +85,12 @@ getDPP <- function(draws, null_value = 1, sig_level = 0.6){
 	# DPP
 	DPP <- unname(abs(EP - EP_low))
 	# get significance
-	DPP_sig <- as.factor(ifelse(DPP > sig_level, 1, 0))
+	DPPsig <- as.factor(ifelse(DPP > sig_level, 1, 0))
 	
 	# return list
 	return(list(EP = EP,
 				DPP = DPP,
-				DPP_sig = DPP_sig))
+				DPPsig = DPPsig))
 }
 
 ## ----------------------------------------------------------------------------
@@ -532,6 +536,128 @@ return(list(nb = nb_out,
 
 }
 
+## -----------------------------------------------------------------------------
+#' @import spdep and igraph
+#' @param sf_data sf data with geometry and 5-digit sa2 codes
+#' @param sa2_name character vector specifying the variable with 5digit sa2 codes. Default is "Sa2_5dig16". 
+#' @param .forsa3 logical (defaults to FALSE) if fixing sa3 map
+#' @return list with nb list, binary weight matrix and group membership list
+getConnectedNB2 <- function(sf_data, 
+                           sa2_name = "Sa2_5dig16", 
+                           .forsa3 = FALSE){
+  
+	require(spdep)
+	require(igraph)
+
+	# create joining list
+	joining_list <- list(to_join = c(21088, 21091, 31527,
+								   31363, 31402, 31466, 
+								   31483, 41145, 61093, 
+								   71060, 71062, 61099),
+					   join2 = list(21308, 21379, 31013, 
+									31362, 31401, 31483, 
+									c(31469,31466), 41128, c(61094, 21476),
+									71021, 71063, c(61100, 21092)))
+
+	if(.forsa3){
+	joining_list <- list(to_join = c(60403, 60203),
+						 join2 = c(20503, 21703))
+	}
+
+
+	# get temporary nb object
+	nb_original<- poly2nb(sf_data)
+	nb_temp <- nb_original
+
+	# get correct ordering from which
+	jwhich <- function(full, sub){
+		out <- as.character(NA)
+		for(i in 1:length(sub)){
+		  temp <- unname(unlist(which(full == as.character(sub[i]))))
+		  out[i] <- ifelse(length(temp) == 0, NA, temp)
+		}
+		return(out)
+	}
+
+	# get sf_data ids which we wish to mutate
+	sa2_names_vec <- unlist(sf_data[,sa2_name] %>% st_drop_geometry())
+	id_to_join <- as.integer(jwhich(sa2_names_vec, joining_list$to_join))
+	#id_to_join <- which(sa2_names_vec %in% as.character(joining_list$to_join))
+
+	# if none to change then proceed with mutation of nb list
+	if(!is_empty(id_to_join)){
+		for(i in 1:length(id_to_join)){
+		  # find index join2
+		  id_join2 <- which(sa2_names_vec %in% as.character(unlist(joining_list$join2[i])))
+		  # update singles
+		  newlist <- as.integer(c(nb_temp[[id_to_join[i]]], id_join2))
+		  nb_temp[[id_to_join[i]]] <- newlist[!duplicated(newlist)]
+		  if(!is_empty(-which(nb_temp[[id_to_join[i]]] == 0))){
+			# remove zeros
+			nb_temp[[id_to_join[i]]] <- nb_temp[[id_to_join[i]]][-which(nb_temp[[id_to_join[i]]] == 0)]
+		  }
+		} 
+	}
+
+	# ensure nb object is symmetric
+	nb_out <- make.sym.nb(nb_temp)
+
+	# check connectedness
+	W <- nb2mat(nb_out, style = "B", zero.policy = TRUE)
+	gg <- graph.adjacency(W)
+	clu <- components(gg)
+	cc <- igraph::groups(clu)
+	message("There are ", length(cc), " unique groups of neighbours!")
+
+	# return the nb object
+	return(list(nb = nb_out, 
+			  W = W,
+			  group_membership = cc))
+  
+}
+
+## ----------------------------------------------------------------------------
+#' @param W_input Should be `nrfs$W_sa2`
+#' @returns list with new weight matrix and ids that were altered
+adjustDonutNeighbors <- function(W_input){
+
+# get indexes for one neighbor areas
+id_one_neighbor <- which(rowSums(W_input) == 1)
+
+# create working matrix
+W_work <- W_input
+
+# loop over areas
+for(i in 1:length(id_one_neighbor)){
+  
+  # set current area
+  cur_area_id <- id_one_neighbor[i]
+  
+  # first order neighbor
+  fo_n <- which(W_input[cur_area_id,] == 1)
+  
+  # new neighbors
+  new_neigh_list <- c(fo_n, which(W_input[fo_n,] == 1))
+  # drop current area
+  new_neigh_list <- new_neigh_list[new_neigh_list != cur_area_id]
+  # set new row
+  new_row <- rep(0, nrow(W_input))
+  new_row[new_neigh_list] <- 1
+  
+  # add to working weight matrix
+  W_work[cur_area_id,] <- new_row
+  
+}
+
+# Return weight matrix
+message("Adjusted ", length(id_one_neighbor), " SA2s which had 1 neighbor.", 
+        "\nThese SA2s now have median number of neighbors of ", median(rowSums(W_work)[which(rowSums(W_input) == 1)]), ".")
+return(list(W = as.matrix(forceSymmetric(W_work, uplo = "U")),
+            W_raw = as.matrix(W_work),
+            adjusted_id = id_one_neighbor))
+
+}
+
 ## ----------------------------------------------------------------------------
 #' @param x factor/character vector
 #' @return numeric vector of zeros and ones from factor x
@@ -572,31 +698,38 @@ getNationalAveragePP <- function(hmc_draws, nat_prop){
 
 ## -----------------------------------------------------------------------------
 #' @param connected_nb a fully connected nb list
+#' @param connected_W a fully connected binary weight matrix list (MUST BE BINARY)
 #' @param zero_policy logical; defaults to F
-mungeCARdata4stan = function(connected_nb, zero.policy = F) {
-  listw <- nb2listw(connected_nb, zero.policy = zero.policy)
-  bgs <- listw2WB(listw)
-  adjBUGS <- bgs$adj
-  numBUGS <- bgs$num
-  N = length(numBUGS);
-  nn = numBUGS;
-  N_edges = length(adjBUGS) / 2;
-  node1 = vector(mode="numeric", length=N_edges);
-  node2 = vector(mode="numeric", length=N_edges);
-  iAdj = 0;
-  iEdge = 0;
-  for (i in 1:N) {
-    for (j in 1:nn[i]) {
-      iAdj = iAdj + 1;
-      if (i < adjBUGS[iAdj]) {
-        iEdge = iEdge + 1;
-        node1[iEdge] = i;
-        node2[iEdge] = adjBUGS[iAdj];
-      }
-    }
-  }
-  #return (list("N"=N,"nu_edges"=N_edges,"node1"=node1,"node2"=node2));
-  return (list("nu_edges"=N_edges,"node1"=node1,"node2"=node2))
+# Only one of connected_nb or connected_W should be given
+mungeCARdata4stan = function(connected_nb = NULL, connected_W = NULL, zero.policy = F) {
+	if(!is.null(connected_nb)){
+		bgs <- listw2WB(nb2listw(connected_nb, zero.policy = zero.policy))
+	}else{
+		bgs <- listw2WB(mat2listw(connected_W, style = "B"))
+	}
+	#listw <- nb2listw(connected_nb, zero.policy = zero.policy)
+	#bgs <- listw2WB(listw)
+	adjBUGS <- bgs$adj
+	numBUGS <- bgs$num
+	N = length(numBUGS);
+	nn = numBUGS;
+	N_edges = length(adjBUGS) / 2;
+	node1 = vector(mode="numeric", length=N_edges);
+	node2 = vector(mode="numeric", length=N_edges);
+	iAdj = 0;
+	iEdge = 0;
+	for (i in 1:N) {
+	for (j in 1:nn[i]) {
+	  iAdj = iAdj + 1;
+	  if (i < adjBUGS[iAdj]) {
+		iEdge = iEdge + 1;
+		node1[iEdge] = i;
+		node2[iEdge] = adjBUGS[iAdj];
+	  }
+	}
+	}
+	#return (list("N"=N,"nu_edges"=N_edges,"node1"=node1,"node2"=node2));
+	return (list("nu_edges"=N_edges,"node1"=node1,"node2"=node2))
 }
 
 ## ----------------------------------------------------------------------------
@@ -629,7 +762,7 @@ getSeq_ps <- function(survey_data,
 ## ----------------------------------------------------------------------------
 #' @param stan_its matrix posterior draws from stan object (its by n_obs)
 #' @param n_chains how many chains were used
-getLOO_s2LN <- function(stan_its, n_chains){
+getLOO_s2LN <- function(stan_its, n_chains, verbose = F){
   
   # Derive the different posterior draws matrices
   y <- stan_its$bar_theta_s1
@@ -642,7 +775,7 @@ getLOO_s2LN <- function(stan_its, n_chains){
   
   # get draws of nu
   # select the columns with data
-  draws <- stan_its$nu[,1:n_obs]
+  draws <- jlogit(stan_its$mu[,1:n_obs])
   
   # create the correct matrices
   y_vec_mat <- matrix(apply(y, 2, median), 
@@ -657,13 +790,17 @@ getLOO_s2LN <- function(stan_its, n_chains){
   # get the log_lik matrix
   log_lik <- dnorm(y_vec_mat, draws, sd_vec_mat, log = TRUE)
   
-  message("Now running loo...")
+ if(verbose) message("Now running loo...")
   
   # derive the relative effective sample size
   r_eff <- loo::relative_eff(exp(log_lik), chain_id = sort(rep(1:n_chains,n_its_pc)))
   
   # return the loo
-  return(loo::loo(log_lik, r_eff = r_eff, cores = 1))
+  if(verbose){
+    return(loo::loo(log_lik, r_eff = r_eff, cores = 1))
+  }else{
+    return(suppressMessages(loo::loo(log_lik, r_eff = r_eff, cores = 1)))
+  }
 }
 
 
@@ -892,26 +1029,28 @@ getMCMCsummary <- function(hmc_draws,
 	
 	# calculate output  when we want p_values
 	if(p_values == T){
-		bind_rows(lapply(asplit(hmc_draws, 2), sum_func)) %>%
+		out <- bind_rows(lapply(asplit(hmc_draws, 2), sum_func)) %>%
 			mutate(CV = 100 * (sd/mean),
 				   CV_b = 100 * (hpd38/median),
 			       cisize = upper - lower,
-			       pvalue = getpvalues(hmc_draws, baseline = baseline),
-				   model = model_name) %>%
-		relocate(model) %>%
-	    setNames(c("model", paste0(prefix, names(.)[-1])))
+			       pvalue = getpvalues(hmc_draws, baseline = baseline)) %>%
+	    setNames(paste0(prefix, names(.)))
 			
 	}else{
 	# calculate output when we do not want p_values
-		bind_rows(lapply(asplit(hmc_draws, 2), sum_func)) %>%
+		out <- bind_rows(lapply(asplit(hmc_draws, 2), sum_func)) %>%
 			mutate(CV = 100 * (sd/mean),
 				   CV_b = 100 * (hpd38/median),
-			       cisize = upper - lower,
-				   model = model_name) %>%
-		relocate(model) %>%
-	    setNames(c("model", paste0(prefix, names(.)[-1])))
+			       cisize = upper - lower) %>%
+	    setNames(paste0(prefix, names(.)))
 	}
-
+	if(is.null(model_name)){
+	  return(out)
+	}else{
+	  out %>% 
+	    mutate(model = model_name) %>% 
+	    relocate(model)
+	}
 }
 
 ## -----------------------------------------------------------------------------
@@ -1023,7 +1162,7 @@ getStanQR <- function(design_mat, ...){
   # center all columns
   x <- scale(x, scale = F, ...)
   # remove intercept
-  x <- x[,-1]
+  x <- as.matrix(x[,-1])
   k <- ncol(x)
   # take the QR decomposition
   qrstr <- qr(x)
@@ -1153,6 +1292,46 @@ getWOLS <- function(y, p, w, area, vars){
 	# return WOLS
 	unname(coef(lm(pd ~ d, data = temp, weights = n))[2])
 }
+
+## ----------------------------------------------------------------------------
+#' @param model_list the model_list object (e.g. s1LN_list)
+#' @param subset_n the number of draws to use
+#' @param ss the seed for the random selection of draws
+#' @return list with 4 objects:
+# (its, theta_s1_its, theta_s1_sd, sqrt_gamma_input, me_w)
+
+getS2LNcomps <- function(model_list, subset_n, ss = 45){
+
+n_draws <- nrow(model_list$its$theta_s1)
+set.seed(ss)
+theta_s1_its <- model_list$its$theta_s1[sample(n_draws,subset_n),]
+
+# return the list object
+return(
+  list(
+    its = nrow(theta_s1_its),
+    theta_s1_its = theta_s1_its,
+    theta_s1_sd = apply(model_list$its$theta_s1, 2, sd),
+    sqrt_gamma_input = apply(sqrt(model_list$its$gamma_s1), 2, mean),
+    me_w = 1/nrow(theta_s1_its))
+)
+
+}
+
+## ----------------------------------------------------------------------------
+check_weights <- function(survey){
+  temp <- survey %>% 
+    group_by(ps_area) %>% 
+    summarise(n = as.integer(n()),
+              s_w = sum(w_sample))
+  cc <- cor(temp$n, temp$s_w)
+  if(cor(temp$n, temp$s_w) != 1){
+    message(paste0("Weight check: Correlation value of ", round(cc, 3)))
+  }
+  
+  if(!(nrow(survey) == sum(survey$w_sample_ps))) message("Weight check: Something may be wrong with w_sample_ps")
+}
+
 
 ## ----------------------------------------------------------------------------
 # Series of functions from the manuscript
@@ -1359,5 +1538,25 @@ overlap_v <- function(direct_l, direct_u, est_l, est_u){
                                  c(est_l[i], est_u[i]))
   }
   
+  return(out)
+}
+
+## -----------------------------------------------------------------------------
+#' @param orc matrix of posterior draws of or - 1
+#' @param orc_lag matrix of posterior draws of spatially lagged or - 1
+#' @returns character vector with HH, LL, HL, LH
+getLISA <- function(orc, orc_lag, cutoff = 0.9){
+  
+  # get EP
+  foo <- function(x)mean(x > 0)
+  x <- apply(orc, 2, foo)
+  x_lag <- apply(orc_lag, 2, foo)
+  
+  # get LISA
+  x_c <- cut(x, breaks = c(0,1-cutoff, cutoff,1), labels = c("L", "M", "H"))
+  x_lag_c <- cut(x_lag, breaks = c(0,1-cutoff, cutoff,1), labels = c("L", "M", "H"))
+  
+  # return character vector
+  out <- ifelse(x_c == "M" | x_lag_c == "M", NA, paste0(x_c, x_lag_c))
   return(out)
 }
