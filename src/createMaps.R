@@ -2,54 +2,9 @@
 ## MAPS ## ---------------------------------------------------------------------
 ## -----------------------------------------------------------------------------
 
-# Sample size of NHS #### ------------------------------------------------------
-
-# create map data
-ss_map <- sample_agg %>% 
-  dplyr::select(ps_area, HT) %>% 
-  mutate(ss_dsc = ifelse(ps_area < 1263 & !is.na(HT), "Sample size > 10", "Sample size <= 10"),
-         ss_dsc = ifelse(ps_area > 1262, "Nonsampled", ss_dsc),
-         ss_dsc = as.factor(ss_dsc)) %>% 
-  left_join(.,map_sa2, by = "ps_area") %>%
-  st_as_sf() %>%
-  st_transform(4326)
-
-# color scale for map
-ss_map_cols <- data.frame(model = c("Nonsampled", "Sample size <= 10", "Sample size > 10"),
-                          color = c("#ffffff", "#808080", "#000000"))
-
-# Create map
-ss_pl <- ss_map %>% 
-  ggplot(aes(fill = ss_dsc))+
-  theme_void()+
-  geom_sf()+
-  scale_fill_manual(values = ss_map_cols$color,
-                    breaks = ss_map_cols$model)+
-  theme(legend.position = "bottom",legend.key.height = unit(0.5, "cm"))+
-  guides(fill = guide_legend(nrow = 3))+
-  labs(fill = "")
-
-ss_pl
-if(export) jsave("ss_map.png", square = FALSE)
-
-# Subset to capital cities
-cities <- lims[c(1,2,3,7),]
-for(i in 1:nrow(cities)){
-  ss_pl +
-    xlim(cities$xmin[i], cities$xmax[i]) +
-    ylim(cities$ymin[i], cities$ymax[i]) +
-    ggtitle(label = cities$city[i])
-  jsave(paste0("map_insets/ss_map_", cities$city[i], ".png"), square = F)
-}
+source("src/ms.R")
 
 # Prevalence #### -------------------------------------------------------------
-# posterior medians (left)
-# size of CI (right)
-# grid for three models (along y axis)
-
-'NOTE: Very uncertain and large prevalence values are for the very top of Australia.
-These areas are all remote or very remote.
-ps_area: 1507 1566 1567 1569 1570 1572 1573 1575 1596'
 
 direct_est <- sample_agg %>% 
   dplyr::select(ps_area, HT, cisize) %>% 
@@ -142,7 +97,7 @@ for(i in 1:8){
 }
 inset_list <- Filter(Negate(is.null), inset_list)
 
-
+# create final list
 lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),

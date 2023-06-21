@@ -2,6 +2,8 @@
 ## TABLES ## -------------------------------------------------------------------
 ## -----------------------------------------------------------------------------
 
+source("src/ms.R")
+
 ## MAIN Table 1: National and state direct estimates ## ------------------------
 
 # Write function to derive columns for direct estimate table
@@ -51,22 +53,34 @@ S1_side <- c("Intercept only", "Fixed effects (FE)",
              "DH RE", "SA2 RE", "Residual error (sd = 1)",
              "Residual error (sd = 2)")
 
-# Function
+# Functions
 rows_of_mbs1 <- function(i){
   model_building[[i]]$s1 %>% 
     make_numeric_decimal() %>% 
     mutate(specs = S1_side,
            rf = names(model_building)[i]) %>% 
-    relocate(rf, specs)
+    relocate(rf, specs) %>% 
+    mutate(id = 1:7)
+}
+temp_wrangle <- function(.data, rfs){
+  .data %>% 
+    filter(rf %in% rfs) %>% 
+    mutate(rf = ifelse(id == 1, rf, "")) %>% 
+    dplyr::select(-id) %>% 
+    setNames(c("", "", "ALC", "SR", "LOOCV"))
 }
 
 # Full table
 temp_df <- bind_rows(lapply(1:4, rows_of_mbs1))
 
 # split into two datasets of 4 and save
-temp_df %>% filter(rf %in% c("smoking", "alcohol", "diet", "obesity")) %>% write.csv("out/tables/mbs1_1.csv")
-temp_df %>% filter(rf %in% c("overweight", "waist_circum", "activityleis", "activityleiswkpl")) %>% write.csv("out/tables/mbs1_2.csv")
-rm(temp_df, rows_of_mbs1, S1_side)
+temp_df %>% 
+  temp_wrangle(c("smoking", "alcohol", "diet", "obesity")) %>% 
+  write.csv("out/tables/mbs1_1.csv")
+temp_df %>% 
+  temp_wrangle(c("overweight", "waist_circum", "activityleis", "activityleiswkpl")) %>% 
+  write.csv("out/tables/mbs1_2.csv")
+rm(temp_df, rows_of_mbs1, S1_side, temp_wrangle)
 
 ## SUPP Table 8-9: Model Building ## -------------------------------------------
 

@@ -126,6 +126,13 @@ names(raw_est) <- str_remove(
   str_remove(
     list.files("data/2021-033_o_0002a_cleared", pattern = "raw_est_*"), "raw_est_"), ".rds")
 
+# Load modelled estimates -- NOT COMPLETE
+modelled_est <- lapply(list.files("data/2021-033_o_0002a_cleared", 
+                             pattern = "modelled_est_*", full.names = T), readRDS)
+names(raw_est) <- str_remove( 
+  str_remove(
+    list.files("data/2021-033_o_0002a_cleared", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
+
 # Model building
 model_building <- lapply(list.files("data/2021-033_o_0002a_cleared", 
                              pattern = "model_building_*", full.names = T), readRDS)
