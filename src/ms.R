@@ -117,28 +117,28 @@ state_name_concor <- data.frame(ps_state = 1:8,
                                                "Australian Capital Territory"))
 
 # Load global data
-global_obj <- readRDS("data/2021-033_o_0002a_cleared/global_obj.rds")
+global_obj <- readRDS("data/DataLabExport/global_obj.rds")
 
 # Load raw estimates
-raw_est <- lapply(list.files("data/2021-033_o_0002a_cleared", 
+raw_est <- lapply(list.files("data/DataLabExport", 
                              pattern = "raw_est_*", full.names = T), readRDS)
 names(raw_est) <- str_remove( 
   str_remove(
-    list.files("data/2021-033_o_0002a_cleared", pattern = "raw_est_*"), "raw_est_"), ".rds")
+    list.files("data/DataLabExport", pattern = "raw_est_*"), "raw_est_"), ".rds")
 
 # Load modelled estimates -- NOT COMPLETE
-modelled_est <- lapply(list.files("data/2021-033_o_0002a_cleared", 
+modelled_est <- lapply(list.files("data/DataLabExport", 
                              pattern = "modelled_est_*", full.names = T), readRDS)
 names(raw_est) <- str_remove( 
   str_remove(
-    list.files("data/2021-033_o_0002a_cleared", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
+    list.files("data/DataLabExport", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
 
 # Model building
-model_building <- lapply(list.files("data/2021-033_o_0002a_cleared", 
+model_building <- lapply(list.files("data/DataLabExport", 
                              pattern = "model_building_*", full.names = T), readRDS)
 names(model_building) <- str_remove( 
   str_remove(
-    list.files("data/2021-033_o_0002a_cleared", pattern = "model_building_*"), "model_building_"), ".rds")
+    list.files("data/DataLabExport", pattern = "model_building_*"), "model_building_"), ".rds")
 
 # Load map
 map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  

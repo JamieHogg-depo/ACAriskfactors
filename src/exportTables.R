@@ -71,7 +71,7 @@ temp_wrangle <- function(.data, rfs){
 }
 
 # Full table
-temp_df <- bind_rows(lapply(1:4, rows_of_mbs1))
+temp_df <- bind_rows(lapply(1:8, rows_of_mbs1))
 
 # split into two datasets of 4 and save
 temp_df %>% 
@@ -100,20 +100,27 @@ rows_of_mbs2 <- function(i){
     make_numeric_decimal() %>% 
     mutate(specs = S2_side,
            rf = names(model_building)[i]) %>% 
-    relocate(rf, specs)
+    relocate(rf, specs)%>% 
+    mutate(id = 1:7)
 }
-
-tempSetNames <- function(.data){
+temp_wrangle <- function(.data, rfs){
   .data %>% 
+    filter(rf %in% rfs) %>% 
+    mutate(rf = ifelse(id == 1, rf, "")) %>% 
+    dplyr::select(-id) %>% 
     setNames(c("", "", "MARB", "MRRMSE", "MIOP", "MARB", "MRRMSE", "MIOP"))
 }
 
 # Full table
-temp_df <- bind_rows(lapply(1:4, rows_of_mbs2))
+temp_df <- bind_rows(lapply(1:8, rows_of_mbs2))
 
 # split into two datasets of 4 and save
-temp_df %>% filter(rf %in% c("smoking", "alcohol", "diet", "obesity")) %>% tempSetNames() %>%  write.csv("out/tables/mbs2_1.csv")
-temp_df %>% filter(rf %in% c("overweight", "waist_circum", "activityleis", "activityleiswkpl")) %>% tempSetNames() %>%  write.csv("out/tables/mbs2_2.csv")
-rm(temp_df, rows_of_mbs2, S2_side, tempSetNames)
+temp_df %>% 
+  temp_wrangle(c("smoking", "alcohol", "diet", "obesity")) %>%
+  write.csv("out/tables/mbs2_1.csv")
+temp_df %>% 
+  temp_wrangle(c("overweight", "waist_circum", "activityleis", "activityleiswkpl")) %>% 
+  write.csv("out/tables/mbs2_2.csv")
+rm(temp_df, rows_of_mbs2, S2_side, temp_wrangle)
 
 ## END SCRIPT ## ---------------------------------------------------------------
