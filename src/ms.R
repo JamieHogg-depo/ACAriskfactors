@@ -100,6 +100,18 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
   }
 }
 
+# small function
+apa <- function(.data, .m_n = FALSE, model_name = NULL){
+  if(.m_n){
+    temp <- .data %>% 
+      mutate(ps_area = 1:nrow(.),
+             model = model_name)
+  }else{
+    temp <- .data %>% 
+      mutate(ps_area = 1:nrow(.))
+  }
+}
+
 ## Load Data ## ----------------------------------------------------------------
 
 # state names
@@ -120,18 +132,26 @@ state_name_concor <- data.frame(ps_state = 1:8,
 global_obj <- readRDS("data/DataLabExport/global_obj.rds")
 
 # Load raw estimates
-raw_est <- lapply(list.files("data/DataLabExport", 
+raw_est <- pbapply::pblapply(list.files("data/DataLabExport", 
                              pattern = "raw_est_*", full.names = T), readRDS)
 names(raw_est) <- str_remove( 
   str_remove(
     list.files("data/DataLabExport", pattern = "raw_est_*"), "raw_est_"), ".rds")
 
+# Load modelled estimates - nonbenchmarked -- NOT COMPLETE
+modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport", 
+                                             pattern = "modelled_est_nb_*", full.names = T), readRDS)
+names(modelled_est_nb) <- str_remove( 
+  str_remove(
+    list.files("data/DataLabExport", pattern = "modelled_est_nb_"), "modelled_est_nb_"), ".rds")
+
 # Load modelled estimates -- NOT COMPLETE
-modelled_est <- lapply(list.files("data/DataLabExport", 
+modelled_est <- pbapply::pblapply(list.files("data/DataLabExport", 
                              pattern = "modelled_est_*", full.names = T), readRDS)
-names(raw_est) <- str_remove( 
+names(modelled_est) <- str_remove( 
   str_remove(
     list.files("data/DataLabExport", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
+modelled_est <- modelled_est[!str_starts(names(modelled_est), "nb_")]
 
 # Model building
 model_building <- lapply(list.files("data/DataLabExport", 
