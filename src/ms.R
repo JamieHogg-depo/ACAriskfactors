@@ -138,20 +138,20 @@ names(raw_est) <- str_remove(
   str_remove(
     list.files("data/DataLabExport", pattern = "raw_est_*"), "raw_est_"), ".rds")
 
-# Load modelled estimates - nonbenchmarked -- NOT COMPLETE
-modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport", 
-                                             pattern = "modelled_est_nb_*", full.names = T), readRDS)
-names(modelled_est_nb) <- str_remove( 
-  str_remove(
-    list.files("data/DataLabExport", pattern = "modelled_est_nb_"), "modelled_est_nb_"), ".rds")
-
-# Load modelled estimates -- NOT COMPLETE
-modelled_est <- pbapply::pblapply(list.files("data/DataLabExport", 
-                             pattern = "modelled_est_*", full.names = T), readRDS)
-names(modelled_est) <- str_remove( 
-  str_remove(
-    list.files("data/DataLabExport", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
-modelled_est <- modelled_est[!str_starts(names(modelled_est), "nb_")]
+# # Load modelled estimates - nonbenchmarked
+# modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport", 
+#                                              pattern = "modelled_est_nb_*", full.names = T), readRDS)
+# names(modelled_est_nb) <- str_remove( 
+#   str_remove(
+#     list.files("data/DataLabExport", pattern = "modelled_est_nb_"), "modelled_est_nb_"), ".rds")
+# 
+# # Load modelled estimates
+# modelled_est <- pbapply::pblapply(list.files("data/DataLabExport", 
+#                              pattern = "modelled_est_*", full.names = T), readRDS)
+# names(modelled_est) <- str_remove( 
+#   str_remove(
+#     list.files("data/DataLabExport", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
+# modelled_est <- modelled_est[!str_starts(names(modelled_est), "nb_")]
 
 # Model building
 model_building <- lapply(list.files("data/DataLabExport", 
@@ -160,13 +160,13 @@ names(model_building) <- str_remove(
   str_remove(
     list.files("data/DataLabExport", pattern = "model_building_*"), "model_building_"), ".rds")
 
-# Load map
-map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
-  mutate(SA2 = as.numeric(SA2_MAIN16)) %>% 
-  filter(!str_detect(SA2_NAME, "Island")) %>% 
-  filter(STATE_NAME != "Other Territories")
-map_sa2 <- map_sa2_full %>%  
-  right_join(.,global_obj$area_concor, by = "SA2")
+# # Load map
+# map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
+#   mutate(SA2 = as.numeric(SA2_MAIN16)) %>% 
+#   filter(!str_detect(SA2_NAME, "Island")) %>% 
+#   filter(STATE_NAME != "Other Territories")
+# map_sa2 <- map_sa2_full %>%  
+#   right_join(.,global_obj$area_concor, by = "SA2")
 
 ## Other code ## --------------------------------------------------------------
 

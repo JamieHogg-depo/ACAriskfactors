@@ -4,59 +4,39 @@
 
 source("src/ms.R")
 
-# Prevalence #### -------------------------------------------------------------
-
-direct_est <- sample_agg %>% 
-  dplyr::select(ps_area, HT, cisize) %>% 
-  rename(median = HT) %>% 
-  mutate(model = "Direct")
-mapping_data <- b_est$summ_mu %>%
-  bind_rows(direct_est) %>% 
-  left_join(.,map_sa2, by = "ps_area") %>%
-  bind_rows(mis_geos) %>% 
-  st_as_sf() %>%
-  st_transform(4326) %>% 
-  # filter single model
-  filter(model == "TSLN")
-
-# Create base map for prevalence
-(base_mu <- mapping_data %>% 
-    filter(model != "Direct") %>% 
-    ggplot(aes(fill = median))+
-    theme_void()+
-    geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.3)+
-    scale_fill_viridis_c(begin = 0, end = 1, 
-                         direction = -1,
-                         option = "B")+
-    labs(fill = "Proportion")+
-    guides(fill = guide_colourbar(barwidth = 20))+
-    theme(legend.position = "bottom"))
+# Start for loop
+#for(i in 1:8){
+  
+  i <- 1
+  rf <- names(raw_est)[i]
+  
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
 
 ## TEMPORARY INSET MAP OF AUSTRALIA ## -----------------------------------------
 
 # Australia outline
-aus_border <- map_sa2_full %>% 
+aus_border <- modelled_est$summ$sa2_map %>% 
   summarise(geometry = st_union(geometry)) %>% 
   st_as_sf() %>%
   st_transform(4326)
 
 # State outline
-state_border <- map_sa2_full %>% 
+state_border <- modelled_est$summ$sa2_map %>% 
   mutate(state = str_sub(SA2, 1, 1)) %>% 
   group_by(state, STATE_NAME) %>% 
   summarise(geometry = st_union(geometry), .groups = "drop") %>% 
-  mutate(st_init = c("NSW", "VIC", "QLD", "SA", "WA", NA, "NT", NA)) %>% 
+  filter(!st_is_empty(.)) %>% 
+  #mutate(st_init = c("NSW", "VIC", "QLD", "SA", "WA", NA, "NT", NA)) %>% 
   st_as_sf() %>%
   st_transform(4326)
 
+## PREVALENCE #### -------------------------------------------------------------
+
 # base map
-base_mu <- map_sa2_full %>% 
-  mutate(y = runif(nrow(.))) %>% 
+base_mu <- modelled_est$summ$sa2_map %>% 
   ggplot()+
   theme_void()+
-  geom_sf(aes(fill = y), col = NA)+
+  geom_sf(aes(fill = mu_median), col = NA)+
   scale_fill_viridis_c(begin = 0, end = 1, 
                        direction = -1,
                        option = "B")+
@@ -102,83 +82,20 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
              c(4,1,1,1,1,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_mu_boxes), inset_list), layout_matrix  = lay)
-jsave("this_plot.png", plot = full_inset_plt, square = F)
+full_inset_plt <- grid.arrange(grobs = c(list(base_mu_boxes), inset_list), 
+                               layout_matrix  = lay)
+jsave(filename = paste0("mu_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
 
-## LEGACY - LEFT OVER ## -------------------------------------------------------
-
-# Create base map for CI prevalence
-(bm_muci <- mapping_data %>% 
-    filter(model != "Direct") %>% 
-    ggplot(aes(fill = cisize))+
-    theme_void()+
-    geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.3)+
-    #facet_grid(.~model)+
-    scale_fill_viridis_c(begin = 0, end = 0.8, 
-                         direction = -1,
-                         option = "D")+
-    labs(fill = "Width of\nHDI")+
-    theme(legend.position = "right", legend.key.height = unit(0.5, "cm"),
-          strip.background = element_blank(),
-          strip.text.x = element_blank()))
-
-# Export full maps
-bm_mu/bm_muci
-if(export) jsave("map_mu.png")
-
-# Subset to capital cities
-cities <- lims[c(1,2,3,7),]
-for(i in 1:nrow(cities)){
-  mu <- bm_mu +
-    xlim(cities$xmin[i], cities$xmax[i]) +
-    ylim(cities$ymin[i], cities$ymax[i]) +
-    ggtitle(label = cities$city[i])
-  muci <- bm_muci +
-    xlim(cities$xmin[i], cities$xmax[i]) +
-    ylim(cities$ymin[i], cities$ymax[i])
-  mu/muci
-  jsave(paste0("map_insets/map_mu_", cities$city[i], ".png"), square = F)
-  message(paste0("City ", i, " (of ", nrow(cities), ")"))
-}
-
-# Brisbane, Sydney, Melbourne subset
-(bm_mu +
-  xlim(cities$xmin[1], cities$xmax[1]) +
-  ylim(cities$ymin[1], cities$ymax[1]) +
-  ggtitle(label = cities$city[1])+
-  theme(legend.position = "none"))/
-(bm_mu +
-   xlim(cities$xmin[2], cities$xmax[2]) +
-   ylim(cities$ymin[2], cities$ymax[2]) +
-   ggtitle(label = cities$city[2])+
-   theme(legend.position = "none"))/
-(bm_mu +
-   xlim(cities$xmin[3], cities$xmax[3]) +
-   ylim(cities$ymin[3], cities$ymax[3]) +
-   ggtitle(label = cities$city[3])+
-   theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-if(export) jsave("map_muonly_BriSydMel.png")
-
-# ORs #### --------------------------------------------------------------------
+## ODDS RATIOS #### ------------------------------------------------------------
 
 # SETUP
 cut_offs <- c(1/1.5, 1.5)
-direct_est <- sample_agg %>% 
-  dplyr::select(ps_area, OR, OR_lower, OR_upper) %>% 
-  rename(median = OR) %>% 
-  mutate(model = "Direct",
-         cisize = OR_upper - OR_lower) %>% 
-  dplyr::select(-c(OR_lower, OR_upper))
-mapping_data <- b_est$summ_or %>%
-  bind_rows(direct_est) %>% 
-  left_join(.,map_sa2, by = "ps_area") %>%
-  bind_rows(mis_geos) %>% 
-  st_as_sf() %>%
-  st_transform(4326) %>%
-  mutate(median = ifelse(median > cut_offs[2], cut_offs[2], median),
-         median = ifelse(median < cut_offs[1], cut_offs[1], median))
+mapping_data <- modelled_est$summ$sa2_map %>% 
+  mutate() %>%
+  mutate(or_median = ifelse(or_median > cut_offs[2], cut_offs[2], or_median),
+         or_median = ifelse(or_median < cut_offs[1], cut_offs[1], or_median))
 
 # define fill colours
 Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
@@ -186,14 +103,75 @@ End <- log(1.6)
 Breaks.fill <- c(1/1.5, 1/1.25, 1, 1.25, 1.5)
 Fill.values <- c(-End, log(Breaks.fill), End)
 
+# base map
+base_or <- mapping_data %>% 
+  ggplot(aes(fill = log(or_median)))+
+  theme_void()+
+  geom_sf(col = NA)+
+  scale_fill_gradientn(colors = Fill.colours,
+                       values = rescale(Fill.values),
+                       labels = as.character(round(Breaks.fill, 3)),
+                       breaks = log(Breaks.fill),
+                       limits = range(Fill.values))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 4),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_or_legend <- base_or +
+    labs(fill = "Odds Ratio")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+
+# Base map with boxes
+base_or_boxes <- base_or_legend
+for(i in 1:8){
+  base_or_boxes <- base_or_boxes + 
+    addBoxLabel(i, color = "green", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base_or +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0)),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,1,1,1,1,7))
+full_inset_plt <- grid.arrange(grobs = c(list(base_or_boxes), inset_list), 
+                               layout_matrix  = lay)
+jsave(filename = paste0("or_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+## DEPREC #### -----------------------------------------------------------------
+
 # Create base map for ORs
 (bm_or <- mapping_data %>%
-    filter(model != "Direct") %>% 
-    ggplot(aes(fill = log(median)))+
+    ggplot(aes(fill = log(or_median)))+
     theme_void()+
     geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.3)+
+    geom_sf(data = aus_border, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.2)+
+    geom_sf(data = state_border, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.1)+
     facet_grid(.~model)+
     scale_fill_gradientn(colors = Fill.colours,
                          values = rescale(Fill.values),
