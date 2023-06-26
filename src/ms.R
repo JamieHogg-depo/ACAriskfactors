@@ -160,13 +160,30 @@ names(model_building) <- str_remove(
   str_remove(
     list.files("data/DataLabExport", pattern = "model_building_*"), "model_building_"), ".rds")
 
-# # Load map
-# map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
-#   mutate(SA2 = as.numeric(SA2_MAIN16)) %>% 
-#   filter(!str_detect(SA2_NAME, "Island")) %>% 
-#   filter(STATE_NAME != "Other Territories")
-# map_sa2 <- map_sa2_full %>%  
-#   right_join(.,global_obj$area_concor, by = "SA2")
+# Load map
+map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%
+  mutate(SA2 = as.numeric(SA2_MAIN16)) %>%
+  filter(!str_detect(SA2_NAME, "Island")) %>%
+  filter(STATE_NAME != "Other Territories")
+map_sa2 <- map_sa2_full %>%
+  right_join(.,global_obj$area_concor, by = "SA2")
+
+# Australia outline
+aus_border <- map_sa2 %>% 
+  summarise(geometry = st_union(geometry)) %>% 
+  st_as_sf() %>%
+  st_transform(4326)
+
+# State outline
+state_border <- map_sa2 %>% 
+  mutate(state = str_sub(SA2, 1, 1)) %>% 
+  group_by(state, STATE_NAME) %>% 
+  summarise(geometry = st_union(geometry), .groups = "drop") %>% 
+  filter(!st_is_empty(.)) %>% 
+  #mutate(st_init = c("NSW", "VIC", "QLD", "SA", "WA", NA, "NT", NA)) %>% 
+  st_as_sf() %>%
+  st_transform(4326)
+
 
 ## Other code ## --------------------------------------------------------------
 

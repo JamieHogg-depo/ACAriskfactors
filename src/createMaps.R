@@ -4,36 +4,19 @@
 
 source("src/ms.R")
 
-# Start for loop
-#for(i in 1:8){
+## START FOR LOOP #### ---------------------------------------------------------
+for(k in 1:8){
   
-  i <- 1
-  rf <- names(raw_est)[i]
+  rf <- names(raw_est)[k]
+  message("Started ", k, ": ", rf)
   
+  # load data
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
-
-## TEMPORARY INSET MAP OF AUSTRALIA ## -----------------------------------------
-
-# Australia outline
-aus_border <- modelled_est$summ$sa2_map %>% 
-  summarise(geometry = st_union(geometry)) %>% 
-  st_as_sf() %>%
-  st_transform(4326)
-
-# State outline
-state_border <- modelled_est$summ$sa2_map %>% 
-  mutate(state = str_sub(SA2, 1, 1)) %>% 
-  group_by(state, STATE_NAME) %>% 
-  summarise(geometry = st_union(geometry), .groups = "drop") %>% 
-  filter(!st_is_empty(.)) %>% 
-  #mutate(st_init = c("NSW", "VIC", "QLD", "SA", "WA", NA, "NT", NA)) %>% 
-  st_as_sf() %>%
-  st_transform(4326)
 
 ## PREVALENCE #### -------------------------------------------------------------
 
 # base map
-base_mu <- modelled_est$summ$sa2_map %>% 
+base <- modelled_est$summ$sa2_map %>% 
   ggplot()+
   theme_void()+
   geom_sf(aes(fill = mu_median), col = NA)+
@@ -45,34 +28,36 @@ base_mu <- modelled_est$summ$sa2_map %>%
   geom_sf(data = state_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.1)+
   theme(legend.position = "none",
-        text = element_text(size = 4),
+        text = element_text(size = 8),
         plot.title = element_text(margin = margin(0,0,2,0)),
         plot.margin = unit(c(1,1,1,1), "mm"))
 
 # Base map with legend
-(base_mu_legend <- base_mu +
+(base_legend <- base +
   labs(fill = "Proportion")+
   guides(fill = guide_colourbar(barwidth = 15, 
                                 title.position = "top",
                                 title.hjust = 0.5))+
   theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
 
 # Base map with boxes
-base_mu_boxes <- base_mu_legend
+base_boxes <- base
 for(i in 1:8){
-  base_mu_boxes <- base_mu_boxes + 
+  base_boxes <- base_boxes + 
     addBoxLabel(i, color = "green", size = 0.2)
 }
 
 # Create list of insets
 inset_list <- list()
 for(i in 1:8){
-  inset_list[[i]] <- base_mu +
+  inset_list[[i]] <- base +
     xlim(lims$xmin[i], lims$xmax[i]) +
     ylim(lims$ymin[i], lims$ymax[i]) +
     labs(title = lims$inset_labs[i])+
     theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
-          plot.title = element_text(margin = margin(0,0,2,0)),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
           plot.margin = unit(c(1,1,1,1), "mm"))
 }
 inset_list <- Filter(Negate(is.null), inset_list)
@@ -81,12 +66,84 @@ inset_list <- Filter(Negate(is.null), inset_list)
 lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
-             c(4,1,1,1,1,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_mu_boxes), inset_list), 
+             c(4,10,10,10,10,7))
+full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
                                layout_matrix  = lay)
+
+# save object
 jsave(filename = paste0("mu_", rf ,".png"), 
       base_folder = paste0(base_folder, "/maps"),
       plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished prevalence")
+
+## PREVALENCE - CI SIZE #### ---------------------------------------------------
+
+# base map
+base <- modelled_est$summ$sa2_map %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = mu_cisize), col = NA)+
+  scale_fill_viridis_c(begin = 0, end = 1, 
+                       direction = -1,
+                       option = "A")+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Width of 95% HDI")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "green", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                               layout_matrix  = lay)
+
+# save object
+jsave(filename = paste0("mucisize_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished prevalence cisize")
 
 ## ODDS RATIOS #### ------------------------------------------------------------
 
@@ -104,7 +161,7 @@ Breaks.fill <- c(1/1.5, 1/1.25, 1, 1.25, 1.5)
 Fill.values <- c(-End, log(Breaks.fill), End)
 
 # base map
-base_or <- mapping_data %>% 
+base <- mapping_data %>% 
   ggplot(aes(fill = log(or_median)))+
   theme_void()+
   geom_sf(col = NA)+
@@ -118,34 +175,36 @@ base_or <- mapping_data %>%
   geom_sf(data = state_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.1)+
   theme(legend.position = "none",
-        text = element_text(size = 4),
+        text = element_text(size = 8),
         plot.title = element_text(margin = margin(0,0,2,0)),
         plot.margin = unit(c(1,1,1,1), "mm"))
 
 # Base map with legend
-(base_or_legend <- base_or +
+(base_legend <- base +
     labs(fill = "Odds Ratio")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
     theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
 
 # Base map with boxes
-base_or_boxes <- base_or_legend
+base_boxes <- base
 for(i in 1:8){
-  base_or_boxes <- base_or_boxes + 
+  base_boxes <- base_boxes + 
     addBoxLabel(i, color = "green", size = 0.2)
 }
 
 # Create list of insets
 inset_list <- list()
 for(i in 1:8){
-  inset_list[[i]] <- base_or +
+  inset_list[[i]] <- base +
     xlim(lims$xmin[i], lims$xmax[i]) +
     ylim(lims$ymin[i], lims$ymax[i]) +
     labs(title = lims$inset_labs[i])+
     theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
-          plot.title = element_text(margin = margin(0,0,2,0)),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
           plot.margin = unit(c(1,1,1,1), "mm"))
 }
 inset_list <- Filter(Negate(is.null), inset_list)
@@ -154,134 +213,96 @@ inset_list <- Filter(Negate(is.null), inset_list)
 lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
-             c(4,1,1,1,1,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_or_boxes), inset_list), 
+             c(4,10,10,10,10,7))
+full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
                                layout_matrix  = lay)
+
+# save plot
 jsave(filename = paste0("or_", rf ,".png"), 
       base_folder = paste0(base_folder, "/maps"),
       plot = full_inset_plt, square = F)
 
-## DEPREC #### -----------------------------------------------------------------
+# cleanup
+rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
+message("---- Finished ors")
 
-# Create base map for ORs
-(bm_or <- mapping_data %>%
-    ggplot(aes(fill = log(or_median)))+
-    theme_void()+
-    geom_sf(col = NA)+
-    geom_sf(data = aus_border, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.2)+
-    geom_sf(data = state_border, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.1)+
-    facet_grid(.~model)+
-    scale_fill_gradientn(colors = Fill.colours,
-                         values = rescale(Fill.values),
-                         labels = as.character(round(Breaks.fill, 3)),
-                         breaks = log(Breaks.fill),
-                         limits = range(Fill.values))+
-    labs(fill = "OR")+
-    theme(legend.position = "right", legend.key.height = unit(0.4, "cm")))
-
-# Create base map for cisize of ORs
-(bm_orci <- mapping_data %>%
-    filter(model != "Direct") %>% 
-    ggplot(aes(fill = cisize))+
-    theme_void()+
-    geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.3)+
-    facet_grid(.~model)+
-    scale_fill_viridis_c(begin = 0, end = 1, 
-                         direction = -1,
-                         oob = squish, 
-                         limits = c(0.01, 8.00), 
-                         #trans = "log",
-                         #breaks = c(0,0.2,1,3,20),
-                         #labels = as.character(c(0,0.2,1,3,20)),
-                         option = "D")+
-    # scale_fill_viridis_c(begin = 0, end = 1, 
-    #                      direction = -1,
-    #                      oob = squish, 
-    #                      limits = c(0.1, 63.7), 
-    #                      trans = "log",
-    #                      breaks = c(0,0.2,1,3,20),
-    #                      labels = as.character(c(0,0.2,1,3,20)),
-    #                      option = "D")+
-    labs(fill = "Width of\nHDI")+
-    theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
-          strip.background = element_blank(),
-          strip.text.x = element_blank()))
-
-# Brisbane, Sydney, Melbourne subset
-(bm_or +
-  xlim(cities$xmin[1], cities$xmax[1]) +
-  ylim(cities$ymin[1], cities$ymax[1]) +
-  ggtitle(label = cities$city[1])+
-  theme(legend.position = "none"))/
-(bm_or +
-   xlim(cities$xmin[2], cities$xmax[2]) +
-   ylim(cities$ymin[2], cities$ymax[2]) +
-   ggtitle(label = cities$city[2])+
-   theme(legend.position = "none"))/
-(bm_or +
-   xlim(cities$xmin[3], cities$xmax[3]) +
-   ylim(cities$ymin[3], cities$ymax[3]) +
-   ggtitle(label = cities$city[3])+
-   theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-if(export) jsave("map_oronly_BriSydMel.png")
-
-# EPs for ORs #### ------------------------------------------------------------
+## ODDS RATIOS - EP #### -------------------------------------------------------
 
 # SETUP
-mapping_data <- b_est$DPP_or %>%
-  bind_rows(data.frame(model = "Direct", ps_area = 1:1695)) %>% 
-  mutate(EP = ifelse(EP == 0, 0.001, EP),
-         EP = ifelse(EP == 1, 0.999, EP)) %>% 
-  left_join(.,map_sa2, by = "ps_area") %>%
-  bind_rows(mis_geos) %>% 
-  st_as_sf() %>%
-  st_transform(4326)
+mapping_data <- modelled_est$summ$sa2_map %>% 
+  mutate(or_EP = ifelse(or_EP == 0, 0.001, or_EP),
+         or_EP = ifelse(or_EP == 1, 0.999, or_EP))
 
-# Create base map for EPs
-(bm_ep <- mapping_data %>%
-    filter(model != "Direct") %>% 
-    ggplot(aes(fill = EP))+
-    theme_void()+
-    geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), 
-            colour = "black", fill = NA, size = 0.3)+
-    facet_grid(.~model)+
-    scale_fill_distiller(palette = "PRGn",
-                         limits = c(-0.0000001,1.0000001),
-                         direction = -1,
-                         #oob = squish,
-                         #trans = "logit",
-                         breaks = c(0,0.2,0.5,0.8,1),
-                         labels = as.character(c(0,0.2,0.5,0.8,1))) +
-    labs(fill = "EP")+
-    theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
-          strip.background = element_blank(),
-          strip.text.x = element_blank()))
+# base map
+base <- mapping_data %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = or_EP), col = NA)+
+  scale_fill_distiller(palette = "PRGn",
+                       limits = c(-0.0000001,1.0000001),
+                       direction = -1,
+                       #oob = squish,
+                       #trans = "logit",
+                       breaks = c(0,0.2,0.5,0.8,1),
+                       labels = as.character(c(0,0.2,0.5,0.8,1)))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
 
-# Export full maps
-bm_or/bm_ep/bm_orci
-if(export) jsave("map_or.png")
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Exceedance probability")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
 
-# Subset to capital cities
-cities <- lims[c(1,2,3,7),]
-for(i in 1:nrow(cities)){
-  or <- bm_or +
-    xlim(cities$xmin[i], cities$xmax[i]) +
-    ylim(cities$ymin[i], cities$ymax[i]) +
-    ggtitle(label = cities$city[i])
-  orci <- bm_orci +
-    xlim(cities$xmin[i], cities$xmax[i]) +
-    ylim(cities$ymin[i], cities$ymax[i])
-  orep <- bm_ep +
-    xlim(cities$xmin[i], cities$xmax[i]) +
-    ylim(cities$ymin[i], cities$ymax[i])
-  (or/orep/orci)
-  jsave(paste0("map_insets/map_or_", cities$city[i], ".png"), square = F)
-  message(paste0("City ", i, " (of ", nrow(cities), ")"))
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "green", size = 0.2)
 }
 
-## END SCRIPT ## --------------------------------------------------------------
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                               layout_matrix  = lay)
+
+# save object
+jsave(filename = paste0("orep_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
+message("---- Finished or eps")
+
+## FINISH FOR LOOP #### --------------------------------------------------------
+
+}
+
+## END SCRIPT #### -------------------------------------------------------------
