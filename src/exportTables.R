@@ -46,6 +46,42 @@ temp_df %>% dplyr::select(1:5) %>% write.csv("out/tables/national_state_direct1.
 temp_df %>% dplyr::select(1, 6:9) %>% write.csv("out/tables/national_state_direct2.csv")
 rm(temp_df, column_of_direct)
 
+## MAIN: Table 3: LISA ## ------------------------------------------------------
+
+# setup list
+ll <- list()
+
+# for loop
+for(k in 1:8){
+
+  rf <- names(raw_est)[k]
+  message("Started ", k, ": ", rf)
+  
+  # load data
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  
+  ll[[k]] <- modelled_est$summ$sa2 %>% 
+    group_by(ra_sa2, LISA) %>% 
+    tally() %>% ungroup() %>% 
+    filter(!is.na(LISA)) %>% 
+    filter(LISA %in% c("HH", "LL")) %>% 
+    group_by(ra_sa2) %>% mutate(p = n/sum(n)) %>% ungroup() %>% 
+    mutate(out = paste0(n, " (", round(p, 2), ")")) %>% 
+    dplyr::select(-c(n,p)) %>% 
+    pivot_wider(names_from = ra_sa2, values_from = out) %>% 
+    relocate(c(1,3,2)) %>% 
+    mutate(rf = rf) %>% 
+    relocate(rf)
+
+}
+
+# combine
+bind_rows(ll) %>% 
+  write.csv("out/tables/LISA.csv")
+
+# cleanup
+rm(ll, rf, modelled_est, k)
+
 ## SUPP Table 6-7: Model Building ## -------------------------------------------
 
 S1_side <- c("Intercept only", "Fixed effects (FE)",
