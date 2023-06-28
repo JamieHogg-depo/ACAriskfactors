@@ -4,10 +4,140 @@
 
 source("src/ms.R")
 
+lookup <- data.frame(rf = names(raw_est),
+                     rf_full = c("Leisure physical activity",
+                                 "All physical activity",
+                                 "Alcohol",
+                                 "Diet",
+                                 "Obesity",
+                                 "Overweight",
+                                 "Current smoking",
+                                 "Risky waist circumference"))
+
+## SAMPLED #### ----------------------------------------------------------------
+
+# base map
+base <- map_sa2 %>% 
+  mutate(sampled = as.factor(ifelse(ps_area < 1695, "Sampled", "Nonsampled"))) %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = sampled), col = NA)+
+  scale_fill_manual(values = c("grey", "white"),
+                    breaks = c("Sampled", "Nonsampled"))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,1,1,1,1,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list), 
+                              layout_matrix  = lay)
+
+# save object
+jsave(filename = paste0("sampled.png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, lay, full_inset_plt)
+message("---- Finished sampled map")
+
+## IRSD #### --------------------------------------------------------------------
+
+# base map
+base <- map_sa2 %>% 
+  arrange(ps_area) %>% 
+  mutate(irsd_5c = irsd_5c) %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = irsd_5c), col = NA)+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "")+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay)
+
+# save object
+jsave(filename = paste0("irsd.png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished irsd")
+
 ## START FOR LOOP #### ---------------------------------------------------------
 for(k in 1:8){
   
   rf <- names(raw_est)[k]
+  rf_full <- lookup[k,]$rf_full
   message("Started ", k, ": ", rf)
   
   # load data
@@ -15,6 +145,9 @@ for(k in 1:8){
 
 ## PREVALENCE #### -------------------------------------------------------------
 
+# squish the top and lower 2.5 quantiles
+rr <- unname(quantile(modelled_est$summ$sa2$mu_median, p = c(0.025,0.975)))
+  
 # base map
 base <- modelled_est$summ$sa2_map %>% 
   ggplot()+
@@ -22,7 +155,8 @@ base <- modelled_est$summ$sa2_map %>%
   geom_sf(aes(fill = mu_median), col = NA)+
   scale_fill_viridis_c(begin = 0, end = 1, 
                        direction = -1,
-                       option = "B")+
+                       option = "F", 
+                       limits = rr, oob = squish)+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
@@ -45,7 +179,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "green", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2)
 }
 
 # Create list of insets
@@ -67,8 +201,9 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
              c(4,10,10,10,10,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
-                               layout_matrix  = lay)
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                               layout_matrix  = lay,
+                               top = textGrob(rf_full,gp=gpar(fontsize=10)))
 
 # save object
 jsave(filename = paste0("mu_", rf ,".png"), 
@@ -88,7 +223,7 @@ base <- modelled_est$summ$sa2_map %>%
   geom_sf(aes(fill = mu_cisize), col = NA)+
   scale_fill_viridis_c(begin = 0, end = 1, 
                        direction = -1,
-                       option = "A")+
+                       option = "D")+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
@@ -111,7 +246,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "green", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2)
 }
 
 # Create list of insets
@@ -133,8 +268,9 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
              c(4,10,10,10,10,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
-                               layout_matrix  = lay)
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                               layout_matrix  = lay,
+                               top = textGrob(rf_full,gp=gpar(fontsize=10)))
 
 # save object
 jsave(filename = paste0("mucisize_", rf ,".png"), 
@@ -192,7 +328,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "green", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2)
 }
 
 # Create list of insets
@@ -214,8 +350,9 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
              c(4,10,10,10,10,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
-                               layout_matrix  = lay)
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                               layout_matrix  = lay,
+                               top = textGrob(rf_full,gp=gpar(fontsize=10)))
 
 # save plot
 jsave(filename = paste0("or_", rf ,".png"), 
@@ -267,7 +404,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "green", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2)
 }
 
 # Create list of insets
@@ -289,8 +426,9 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(5,1,1,1,1,3),
              c(6,1,1,1,1,8),
              c(4,10,10,10,10,7))
-full_inset_plt <- grid.arrange(grobs = c(list(base_boxes), inset_list, list(llegend)), 
-                               layout_matrix  = lay)
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                               layout_matrix  = lay,
+                               top = textGrob(rf_full,gp=gpar(fontsize=10)))
 
 # save object
 jsave(filename = paste0("orep_", rf ,".png"), 
@@ -300,6 +438,71 @@ jsave(filename = paste0("orep_", rf ,".png"),
 # cleanup
 rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
 message("---- Finished or eps")
+
+## LISA #### -------------------------------------------------------------------
+
+# base map
+base <- modelled_est$summ$sa2_map %>% 
+  mutate(LISA_c = as.character(LISA),
+         LISA_c = as.factor(ifelse(LISA_c %in% c("HL", "LH"), NA, LISA_c))) %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = LISA_c), col = NA)+
+  scale_fill_manual(values = c("coral", "cyan"),
+                    breaks = c("HH", "LL"))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "")+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob(rf_full,gp=gpar(fontsize=10)))
+
+# save object
+jsave(filename = paste0("lisa_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished LISA")
 
 ## FINISH FOR LOOP #### --------------------------------------------------------
 

@@ -13,24 +13,33 @@ lookup <- data.frame(rf = names(raw_est),
 for(k in 1:8){
   
   rf <- names(raw_est)[k]
-  sha_var = paste0("SHAPHA_estimate_", lookup[lookup$rf == rf,]$sha)
+  sha_vars = paste0("shaout_", lookup[lookup$rf == rf,]$sha, "_", c("estimate", "lower", "upper"))
   message("Started ", k, ": ", rf)
   
   # load data
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  modelled_est_nb <- readRDS(file = paste0("data/summary_files/", rf, "_b0.rds"))
   
 ## Scatter: SHA PHA vs ACA #### ------------------------------------------------
   
 modelled_est$summ$sa2 %>% 
+    left_join(.,SHA_pha, by = "pha") %>% 
+    mutate(irsd_5c = irsd_5c) %>% 
     ggplot(aes(x = mu_median, xmin = mu_lower, xmax = mu_upper, 
-               y = .data[[sha_var]]))+
+               y = .data[[sha_vars[1]]], 
+               ymin = .data[[sha_vars[2]]], 
+               ymax = .data[[sha_vars[3]]],
+               col = irsd_5c))+
     theme_bw()+
     geom_errorbar(col = "grey")+
+    geom_errorbarh(col = "grey")+
     geom_abline()+
     geom_point()+
-    labs(y = "Point estimtes from SHAA (PHA level)",
-         x = "Current posterior medians (SA2 level)")+
-    ylim(0,1)+xlim(0,1)
+    labs(y = "SHAA (PHA level)",
+         x = "Our estimates (SA2 level)",
+         col = "SES")+
+    ylim(0,1)+xlim(0,1)+
+    theme(legend.position = "bottom")
   
 # save object
 jsave(filename = paste0("scatter_shaphavsaca_", rf ,".png"), 
@@ -104,13 +113,14 @@ jsave(filename = paste0("catterpillar_", rf ,".png"),
 
 ## Scatter - SA4 direct vs SA4 modelled #### -----------------------------------
 
-# setup
-temp <- left_join(modelled_est$summ$sa4, raw_est[[k]]$sa4, by = "ps_sa4")
-for_range <- with(temp, c(lower, upper, HT - 1.96 * HT_SE, HT + 1.96 * HT_SE))
-st_range <- range(for_range)
-  
+## Non-Benchmarked 
+temp <- left_join(modelled_est_nb$summ$sa4, raw_est[[k]]$sa4, by = "ps_sa4")
+for_range <- c(with(temp, c(lower, upper, HT - 1.96 * HT_SE, HT + 1.96 * HT_SE)),
+               with(modelled_est$summ$sa4, c(lower, upper)))
+st_range <- range(for_range, na.rm = T)
+
 # plot
-  temp %>% 
+nb_plt <- temp %>% 
   ggplot(aes(y = median, ymin = lower, ymax = upper,
              x = HT, 
              xmin = HT - 1.96 * HT_SE, 
@@ -126,26 +136,60 @@ st_range <- range(for_range)
                         option = "A")+
   labs(col = "Log\ndirect\nestimate\nCV",
        y = "Modelled",
-       x = "Direct")+
+       x = "Direct",
+       title = "Non-benchmarked")+
   ylim(st_range[1],st_range[2])+xlim(st_range[1],st_range[2])
+
+# extract legend
+llegend <- ggpubr::get_legend(nb_plt)
+nb_plt <- nb_plt + theme(legend.position = "none")
+  
+## Benchmarked 
+b_plt <- left_join(modelled_est$summ$sa4, raw_est[[k]]$sa4, by = "ps_sa4") %>% 
+  ggplot(aes(y = median, ymin = lower, ymax = upper,
+             x = HT, 
+             xmin = HT - 1.96 * HT_SE, 
+             xmax = HT + 1.96 * HT_SE,
+             col = log(HT_CV)))+
+  theme_bw()+
+  geom_errorbar(col = "grey")+
+  geom_errorbarh(col = "grey")+
+  geom_abline()+
+  geom_point()+
+  scale_color_viridis_c(begin = 0, end = 1, 
+                        direction = -1,
+                        option = "A")+
+  labs(col = "Log\ndirect\nestimate\nCV",
+       y = "Modelled",
+       x = "Direct",
+       title = "Benchmarked")+
+  ylim(st_range[1],st_range[2])+xlim(st_range[1],st_range[2])+
+  theme(legend.position = "none")
+
+## Full plot
+lay <- rbind(c(1,1,1,3),
+             c(2,2,2,3))
+full_plt <- arrangeGrob(grobs = list(nb_plt, b_plt, llegend), 
+                        layout_matrix  = lay)
 
 # save object
 jsave(filename = paste0("scatter_sa4directvsmodelled_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
+      plot = full_plt,
       square = F)
 
 # cleanup
-rm(temp, for_range, st_range)
+rm(temp, for_range, st_range, full_plt, nb_plt, b_plt, lay, llegend)
 
 ## Scatter - MSB direct vs modelled #### ---------------------------------------
 
-# setup
-temp <- left_join(modelled_est$summ$msb, raw_est[[k]]$msb, by = "ps_majorstatebench")
+## Non-Benchmarked 
+temp <- left_join(modelled_est_nb$summ$msb, raw_est[[k]]$msb, by = "ps_majorstatebench")
 for_range <- with(temp, c(mu_lower, mu_upper, HT - 1.96 * HT_SE, HT + 1.96 * HT_SE))
 st_range <- range(for_range)
 
 # plot
-temp %>% 
+nb_plt <- temp %>% 
   ggplot(aes(y = mu_median, ymin = mu_lower, ymax = mu_upper,
              x = HT, 
              xmin = HT - 1.96 * HT_SE, 
@@ -161,16 +205,50 @@ temp %>%
                         option = "A")+
   labs(col = "Log\ndirect\nestimate\nCV",
        y = "Modelled",
-       x = "Direct")+
+       x = "Direct",
+       title = "Non-benchmarked")+
   ylim(st_range[1],st_range[2])+xlim(st_range[1],st_range[2])
+
+# extract legend
+llegend <- ggpubr::get_legend(nb_plt)
+nb_plt <- nb_plt + theme(legend.position = "none")
+
+## Benchmarked
+b_plt <- left_join(modelled_est$summ$msb, raw_est[[k]]$msb, by = "ps_majorstatebench") %>% 
+  ggplot(aes(y = mu_median, ymin = mu_lower, ymax = mu_upper,
+             x = HT, 
+             xmin = HT - 1.96 * HT_SE, 
+             xmax = HT + 1.96 * HT_SE,
+             col = log(HT_CV)))+
+  theme_bw()+
+  geom_errorbar(col = "grey")+
+  geom_errorbarh(col = "grey")+
+  geom_abline()+
+  geom_point()+
+  scale_color_viridis_c(begin = 0, end = 1, 
+                        direction = -1,
+                        option = "A")+
+  labs(col = "Log\ndirect\nestimate\nCV",
+       y = "Modelled",
+       x = "Direct",
+       title = "Benchmarked")+
+  ylim(st_range[1],st_range[2])+xlim(st_range[1],st_range[2])+
+  theme(legend.position = "none")
+
+## Full plot
+lay <- rbind(c(1,1,1,3),
+             c(2,2,2,3))
+full_plt <- arrangeGrob(grobs = list(nb_plt, b_plt, llegend), 
+                        layout_matrix  = lay)
 
 # save object
 jsave(filename = paste0("scatter_msbdirectvsmodelled_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
+      plot = full_plt, 
       square = F)
 
 # cleanup
-rm(temp, for_range, st_range)
+rm(temp, for_range, st_range, full_plt, nb_plt, b_plt, lay, llegend)
 
 ## FINISH FOR LOOP #### --------------------------------------------------------
 

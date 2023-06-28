@@ -60,27 +60,43 @@ for(k in 1:8){
   # load data
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
   
+  # get totals
+  temp <- modelled_est$summ$sa2 %>% 
+    group_by(LISA) %>% 
+    tally() %>% ungroup() %>% 
+    filter(!is.na(LISA)) %>% 
+    filter(LISA %in% c("HH", "LL")) %>% 
+    mutate(out = as.character(n)) %>% 
+    mutate(ra_sa2 = "Total") %>% 
+    dplyr::select(ra_sa2, LISA, out)
+  
+  # rest of table
   ll[[k]] <- modelled_est$summ$sa2 %>% 
     group_by(ra_sa2, LISA) %>% 
     tally() %>% ungroup() %>% 
     filter(!is.na(LISA)) %>% 
     filter(LISA %in% c("HH", "LL")) %>% 
-    group_by(ra_sa2) %>% mutate(p = n/sum(n)) %>% ungroup() %>% 
-    mutate(out = paste0(n, " (", round(p, 2), ")")) %>% 
+    group_by(LISA) %>% mutate(p = n/sum(n)) %>% ungroup() %>% 
+    mutate(n = as.character(n)) %>% 
+    make_numeric_decimal(digits = 2) %>% 
+    mutate(out = paste0(n, " \textcolor{gray}{(", p, ")}")) %>% 
     dplyr::select(-c(n,p)) %>% 
-    pivot_wider(names_from = ra_sa2, values_from = out) %>% 
+    bind_rows(.,temp) %>% 
+    pivot_wider(names_from = ra_sa2, values_from = out,
+                values_fill = "") %>% 
     relocate(c(1,3,2)) %>% 
     mutate(rf = rf) %>% 
-    relocate(rf)
+    relocate(rf, LISA, Total)
 
 }
 
 # combine
 bind_rows(ll) %>% 
+  setNames(c("", "", "", names(.)[-c(1:3)])) %>% 
   write.csv("out/tables/LISA.csv")
 
 # cleanup
-rm(ll, rf, modelled_est, k)
+rm(ll, rf, modelled_est, k, temp)
 
 ## SUPP Table 6-7: Model Building ## -------------------------------------------
 
