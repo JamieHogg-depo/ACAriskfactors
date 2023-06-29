@@ -44,7 +44,7 @@ modelled_est$summ$sa2 %>%
 # save object
 jsave(filename = paste0("scatter_shaphavsaca_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
-      square = F)
+      square = T)
 
 ## Boxplot: ACA vs SEIFA and Remoteness #### -----------------------------------
 
@@ -109,7 +109,7 @@ modelled_est$summ$sa2 %>%
 # save object
 jsave(filename = paste0("catterpillar_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
-      square = F)
+      square = T)
 
 ## Scatter - SA4 direct vs SA4 modelled #### -----------------------------------
 

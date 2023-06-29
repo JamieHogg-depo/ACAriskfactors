@@ -1,5 +1,6 @@
 # More funs
 
+# simple function to streamline the saving of plots
 jsave <- function(filename, base_folder, 
                   plot = last_plot(), 
                   square = T, square_size = 5000, 
@@ -28,7 +29,7 @@ jsave <- function(filename, base_folder,
   }
 }
 
-
+# used in pipes to enforce rounding
 make_numeric_decimal <- function(.data, digits = 2){
   df <- .data
   cols_to_format <- unlist(lapply(df, is.numeric))
@@ -36,6 +37,7 @@ make_numeric_decimal <- function(.data, digits = 2){
   return(df)
 }
 
+# adds boxlabels to maps
 addBoxLabel <- function(i, color = "white", size = 0.5){
   if(lims$position[i] == "r"){
     list(
@@ -105,3 +107,40 @@ state_name_concor <- data.frame(ps_state = 1:8,
                                                "Tasmania",
                                                "Northern Territory",
                                                "Australian Capital Territory"))
+
+# To be used in `mutate()` to relabel rf 
+getRFFullNames <- function(x){
+  temp <- case_when(
+    x == "waist_circum" ~ "Risky waist\ncircumference",
+    x == "smoking" ~ "Current smoking",
+    x == "overweight" ~ "Overweight",
+    x == "obesity" ~ "Obesity",
+    x == "diet" ~ "Diet",
+    x == "alcohol" ~ "Alcohol",
+    x == "activityleis" ~ "Leisure physical\nactivity",
+    x == "activityleiswkpl" ~ "All physical\nactivity"
+  )
+  return(factor(temp, 
+                levels = c("Current smoking",
+                "Alcohol",
+                "Diet",
+                "Obesity",
+                "Overweight",
+                "Risky waist\ncircumference",
+                "Leisure physical\nactivity",
+                "All physical\nactivity")))
+}
+
+# Adds correct color scale to ra_sa2
+addRemotenessColor <- function(){
+  scale_fill_manual(breaks = c("Major Cities", "Inner Regional",
+                               "Outer Regional", "Remote", "Very Remote"),
+                    values = c('#fef0d9','#fdcc8a','#fc8d59','#e34a33','#b30000'))
+}
+
+# Adds correct color scale to irsd_5c
+addIRSDColor <- function(){
+  scale_fill_manual(breaks = c("1 - least\nadvantaged", "2", "3", "4",
+                               "5 - most\nadvantaged"),
+                    values = rev(c('#edf8e9','#bae4b3','#74c476','#31a354','#006d2c')))
+}

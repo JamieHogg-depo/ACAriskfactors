@@ -34,6 +34,9 @@ names(raw_est) <- str_remove(
   str_remove(
     list.files("data/DataLabExport", pattern = "raw_est_*"), "raw_est_"), ".rds")
 
+# Load all modelled estimates
+summsa2all <- readRDS("data/summary_files/summsa2all.rds")
+
 # # Load modelled estimates - nonbenchmarked
 # modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport", 
 #                                              pattern = "modelled_est_nb_*", full.names = T), readRDS)
@@ -100,11 +103,11 @@ lims <- data.frame(
 # quantiles for IRSD
 irsd_5c <- mutate(global_obj$census, 
        IRSD = case_when(
-         ABS_irsd_decile_nation_complete %in% c("1", "2") ~ "1 - least advantaged",
+         ABS_irsd_decile_nation_complete %in% c("1", "2") ~ "1 - least\nadvantaged",
          ABS_irsd_decile_nation_complete %in% c("3", "4") ~ "2",
          ABS_irsd_decile_nation_complete %in% c("5", "6") ~ "3",
          ABS_irsd_decile_nation_complete %in% c("7", "8") ~ "4",
-         ABS_irsd_decile_nation_complete %in% c("9", "10") ~ "5 - most advantaged"
+         ABS_irsd_decile_nation_complete %in% c("9", "10") ~ "5 - most\nadvantaged"
        )) %>% 
   dplyr::select(IRSD)
 irsd_5c <- irsd_5c$IRSD 

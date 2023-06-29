@@ -46,7 +46,7 @@ temp_df %>% dplyr::select(1:5) %>% write.csv("out/tables/national_state_direct1.
 temp_df %>% dplyr::select(1, 6:9) %>% write.csv("out/tables/national_state_direct2.csv")
 rm(temp_df, column_of_direct)
 
-## MAIN: Table 3: LISA ## ------------------------------------------------------
+## MAIN: Table 3: LISA_ra ## ---------------------------------------------------
 
 # setup list
 ll <- list()
@@ -93,7 +93,59 @@ for(k in 1:8){
 # combine
 bind_rows(ll) %>% 
   setNames(c("", "", "", names(.)[-c(1:3)])) %>% 
-  write.csv("out/tables/LISA.csv")
+  write.csv("out/tables/LISA_ra.csv")
+
+# cleanup
+rm(ll, rf, modelled_est, k, temp)
+
+## MAIN: Table 3: LISA_irsd ## -------------------------------------------------
+
+# setup list
+ll <- list()
+
+# for loop
+for(k in 1:8){
+  
+  rf <- names(raw_est)[k]
+  message("Started ", k, ": ", rf)
+  
+  # load data
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  
+  # get totals
+  temp <- modelled_est$summ$sa2 %>% 
+    group_by(LISA) %>% 
+    tally() %>% ungroup() %>% 
+    filter(!is.na(LISA)) %>% 
+    filter(LISA %in% c("HH", "LL")) %>% 
+    mutate(out = as.character(n)) %>% 
+    mutate(irsd_5c = "Total") %>% 
+    dplyr::select(irsd_5c, LISA, out)
+  
+  # rest of table
+  ll[[k]] <- modelled_est$summ$sa2 %>% 
+    mutate(irsd_5c = irsd_5c) %>% 
+    group_by(irsd_5c, LISA) %>% 
+    tally() %>% ungroup() %>% 
+    filter(!is.na(LISA)) %>% 
+    filter(LISA %in% c("HH", "LL")) %>% 
+    group_by(LISA) %>% mutate(p = n/sum(n)) %>% ungroup() %>% 
+    mutate(n = as.character(n)) %>% 
+    make_numeric_decimal(digits = 2) %>% 
+    mutate(out = paste0(n, " \textcolor{gray}{(", p, ")}")) %>% 
+    dplyr::select(-c(n,p)) %>% 
+    bind_rows(.,temp) %>% 
+    pivot_wider(names_from = irsd_5c, values_from = out,
+                values_fill = "") %>% 
+    mutate(rf = rf) %>% 
+    relocate(rf, LISA, Total)
+  
+}
+
+# combine
+bind_rows(ll) %>% 
+  setNames(c("", "", "", names(.)[-c(1:3)])) %>% 
+  write.csv("out/tables/LISA_irsd.csv")
 
 # cleanup
 rm(ll, rf, modelled_est, k, temp)
