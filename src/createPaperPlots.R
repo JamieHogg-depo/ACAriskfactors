@@ -139,16 +139,7 @@ for(k in 1:8){
 
 # create full data
 nb_data <- bind_rows(ll) %>% 
-  mutate(rf = as.factor(case_when(
-    rf == "waist_circum" ~ "Risky waist\ncircumference",
-    rf == "smoking" ~ "Smoking",
-    rf == "overweight" ~ "Overweight",
-    rf == "obesity" ~ "Obesity",
-    rf == "diet" ~ "Diet",
-    rf == "alcohol" ~ "Alcohol",
-    rf == "activityleis" ~ "Leisure physical\nactivity",
-    rf == "activityleiswkpl" ~ "All physical\nactivity"
-  )))
+  mutate(rf = getRFFullNames(rf))
   
 # create plot
 nb_data %>% 

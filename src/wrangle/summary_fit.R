@@ -2,6 +2,21 @@
 ## summary_fit ## --------------------------------------------------------------
 ## -----------------------------------------------------------------------------
 
+# Load modelled estimates - nonbenchmarked
+modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport",
+                                             pattern = "modelled_est_nb_*", full.names = T), readRDS)
+names(modelled_est_nb) <- str_remove(
+  str_remove(
+    list.files("data/DataLabExport", pattern = "modelled_est_nb_"), "modelled_est_nb_"), ".rds")
+
+# Load modelled estimates
+modelled_est <- pbapply::pblapply(list.files("data/DataLabExport",
+                             pattern = "modelled_est_*", full.names = T), readRDS)
+names(modelled_est) <- str_remove(
+  str_remove(
+    list.files("data/DataLabExport", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
+modelled_est <- modelled_est[!str_starts(names(modelled_est), "nb_")]
+
 # sparse matrices for cluster analysis
 W_sparse <- as(t(global_obj$W/rowSums(global_obj$W)), "sparseMatrix")
 W_sq <- global_obj$W %*% global_obj$W
@@ -45,6 +60,7 @@ mu <- getMCMCsummary(sf_list$draws$mu, prefix = "mu_", model_name = rf) %>% apa(
 muspo1 <- getMCMCsummary(sf_list$draws$mu_spo1, prefix = "muspo1_") %>% apa()
 muspo2 <- getMCMCsummary(sf_list$draws$mu_spo2, prefix = "muspo2_") %>% apa()
 or <- getMCMCsummary(sf_list$draws$or, prefix = "or_") %>% apa()
+logor <- getMCMCsummary(log(sf_list$draws$or), prefix = "logor_") %>% apa()
 sf_list$summ$sa4 <- getMCMCsummary(sf_list$draws$mu_sa4) %>% mutate(ps_sa4 = 1:nrow(.)) %>% relocate(ps_sa4)
 sf_list$summ$msb <- getMCMCsummary(sf_list$draws$mu_msb, prefix = "mu_", model_name = rf) %>% 
   mutate(ps_majorstatebench = 1:nrow(.)) %>% 
@@ -59,12 +75,14 @@ DPP_or <- bind_cols(getDPP(sf_list$draws$or, null_value = 1)) %>%
 
 ## Summarize for all ## ----
 
-sf_list$summ$sa2 <- list(mu, muspo1, muspo2, DPP_mu, or, DPP_or) %>% 
+sf_list$summ$sa2 <- list(mu, muspo1, muspo2, DPP_mu, or, DPP_or, logor) %>% 
   reduce(inner_join, by = "ps_area") %>% 
   mutate(LISA = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag))) %>% 
   left_join(.,global_obj$census, by = "ps_area")
+
+# keep empty geometries
 sf_list$summ$sa2_map <- sf_list$summ$sa2 %>% 
-  left_join(.,map_sa2, by = c("ps_area", "SA2")) %>% sf::st_as_sf()
+  right_join(.,map_sa2, by = c("ps_area", "SA2")) %>% sf::st_as_sf()
 
 ## Save sf_list object ## ----
 rm(or, mu, DPP_or, DPP_mu)

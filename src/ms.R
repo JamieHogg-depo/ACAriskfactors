@@ -12,15 +12,15 @@ library(readr)
 library(readxl)
 library(grid)
 library(gridExtra)
+library(Matrix)
 rm(list = ls())
 
 base_folder <- "C:/r_proj/ACAriskfactors/out"
-export <- FALSE
 
 ## Functions ## ----------------------------------------------------------------
 
-source('src/functions_ALL.R')
-source('src/moreFuns.R')
+source('src/wrangle/functions_ALL.R')
+source('src/wrangle/moreFuns.R')
 
 ## Load Data ## ----------------------------------------------------------------
 
@@ -37,21 +37,6 @@ names(raw_est) <- str_remove(
 # Load all modelled estimates
 summsa2all <- readRDS("data/summary_files/summsa2all.rds")
 
-# # Load modelled estimates - nonbenchmarked
-# modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport", 
-#                                              pattern = "modelled_est_nb_*", full.names = T), readRDS)
-# names(modelled_est_nb) <- str_remove( 
-#   str_remove(
-#     list.files("data/DataLabExport", pattern = "modelled_est_nb_"), "modelled_est_nb_"), ".rds")
-# 
-# # Load modelled estimates
-# modelled_est <- pbapply::pblapply(list.files("data/DataLabExport", 
-#                              pattern = "modelled_est_*", full.names = T), readRDS)
-# names(modelled_est) <- str_remove( 
-#   str_remove(
-#     list.files("data/DataLabExport", pattern = "modelled_est_*"), "modelled_est_"), ".rds")
-# modelled_est <- modelled_est[!str_starts(names(modelled_est), "nb_")]
-
 # Model building
 model_building <- lapply(list.files("data/DataLabExport", 
                              pattern = "model_building_*", full.names = T), readRDS)
@@ -64,8 +49,10 @@ map_sa2_full <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_S
   mutate(SA2 = as.numeric(SA2_MAIN16)) %>%
   filter(!str_detect(SA2_NAME, "Island")) %>%
   filter(STATE_NAME != "Other Territories")
+
+# keep non-estimated geometries
 map_sa2 <- map_sa2_full %>%
-  right_join(.,global_obj$area_concor, by = "SA2")
+  left_join(.,global_obj$area_concor, by = "SA2")
 
 # Australia outline
 aus_border <- map_sa2 %>% 
@@ -102,18 +89,17 @@ lims <- data.frame(
 
 # quantiles for IRSD
 irsd_5c <- mutate(global_obj$census, 
-       IRSD = case_when(
+       irsd_5c = case_when(
          ABS_irsd_decile_nation_complete %in% c("1", "2") ~ "1 - least\nadvantaged",
          ABS_irsd_decile_nation_complete %in% c("3", "4") ~ "2",
          ABS_irsd_decile_nation_complete %in% c("5", "6") ~ "3",
          ABS_irsd_decile_nation_complete %in% c("7", "8") ~ "4",
          ABS_irsd_decile_nation_complete %in% c("9", "10") ~ "5 - most\nadvantaged"
        )) %>% 
-  dplyr::select(IRSD)
-irsd_5c <- irsd_5c$IRSD 
+  dplyr::select(ps_area, irsd_5c)
 
 ## Load PHA SHA data ## --------------------------------------------------------
 
-source("src/getSHA.R")
+source("src/wrangle/getSHA.R")
 
 ## END SCRIPT ## --------------------------------------------------------------

@@ -76,7 +76,7 @@ message("---- Finished sampled map")
 # base map
 base <- map_sa2 %>% 
   arrange(ps_area) %>% 
-  mutate(irsd_5c = irsd_5c) %>% 
+  left_join(.,irsd_5c, by = "ps_area") %>% 
   ggplot()+
   theme_void()+
   geom_sf(aes(fill = irsd_5c), col = NA)+
@@ -441,15 +441,20 @@ message("---- Finished or eps")
 
 ## LISA #### -------------------------------------------------------------------
 
+modelled_est$summ$sa2_map <- modelled_est$summ$sa2 %>% 
+  right_join(.,map_sa2, by = c("ps_area", "SA2")) %>% sf::st_as_sf()
+
 # base map
 base <- modelled_est$summ$sa2_map %>% 
-  mutate(LISA_c = as.character(LISA),
-         LISA_c = as.factor(ifelse(LISA_c %in% c("HL", "LH"), NA, LISA_c))) %>% 
+  mutate(lisa = ifelse(or_EP > 0.9, "H", 
+                       ifelse(or_EP < 0.1, "L", NA)),
+         LISA_c = factor(ifelse(is.na(LISA) & !is.na(lisa), lisa, as.character(LISA)),
+                         levels = c("HH", "H", "L", "LL"))) %>% 
   ggplot()+
   theme_void()+
   geom_sf(aes(fill = LISA_c), col = NA)+
-  scale_fill_manual(values = c("coral", "cyan"),
-                    breaks = c("HH", "LL"))+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 

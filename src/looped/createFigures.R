@@ -7,12 +7,21 @@ source("src/ms.R")
 lookup <- data.frame(rf = names(raw_est),
                      sha = c("exercise", "exercise", "alcohol", 
                              "fruit", "obese", "overweight",
-                             "smoking", "overweight"))
+                             "smoking", "overweight"),
+                     rf_full = c("Leisure physical activity",
+                                 "All physical activity",
+                                 "Alcohol",
+                                 "Diet",
+                                 "Obesity",
+                                 "Overweight",
+                                 "Current smoking",
+                                 "Risky waist circumference"))
 
 ## START FOR LOOP #### ---------------------------------------------------------
 for(k in 1:8){
   
   rf <- names(raw_est)[k]
+  rf_full <- lookup[k,]$rf_full
   sha_vars = paste0("shaout_", lookup[lookup$rf == rf,]$sha, "_", c("estimate", "lower", "upper"))
   message("Started ", k, ": ", rf)
   
@@ -24,7 +33,7 @@ for(k in 1:8){
   
 modelled_est$summ$sa2 %>% 
     left_join(.,SHA_pha, by = "pha") %>% 
-    mutate(irsd_5c = irsd_5c) %>% 
+    left_join(.,irsd_5c, by = "ps_area") %>% 
     ggplot(aes(x = mu_median, xmin = mu_lower, xmax = mu_upper, 
                y = .data[[sha_vars[1]]], 
                ymin = .data[[sha_vars[2]]], 
@@ -44,16 +53,16 @@ modelled_est$summ$sa2 %>%
 # save object
 jsave(filename = paste0("scatter_shaphavsaca_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
-      square = T)
+      square = F)
 
 ## Boxplot: ACA vs SEIFA and Remoteness #### -----------------------------------
 
 seifa <- modelled_est$summ$sa2 %>% 
   mutate(ABS_irsd_decile_nation_complete = factor(ABS_irsd_decile_nation_complete, 
                                                   levels = 1:10,
-                                         labels = c("Least advantaged", 
+                                         labels = c("Least\nadvantaged", 
                                                     as.character(2:9), 
-                                                    "Most advantaged"))) %>% 
+                                                    "Most\nadvantaged"))) %>% 
   ggplot(aes(x = mu_median,
              y = ABS_irsd_decile_nation_complete))+
   theme_bw()+
@@ -77,13 +86,14 @@ ra <- modelled_est$summ$sa2 %>%
 lay <- rbind(c(1),
              c(2))
 full_plt <- grid.arrange(grobs = list(seifa, ra), 
-                               layout_matrix  = lay)
+                               layout_matrix  = lay,
+                         top = textGrob(rf_full,gp=gpar(fontsize=10)))
 
 # save object
 jsave(filename = paste0("boxplot_avaseifaremoteness_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
       plot = full_plt,
-      square = F)
+      square = T)
 
 # cleanup
 rm(seifa, ra)
@@ -103,13 +113,14 @@ modelled_est$summ$sa2 %>%
                       direction = 1,
                       option = "B")+
   labs(y = "Modeled prevalence estimates",
-       x = "")+
+       x = "", 
+       title = rf_full)+
   theme(legend.position = "none")
 
 # save object
 jsave(filename = paste0("catterpillar_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
-      square = T)
+      square = F)
 
 ## Scatter - SA4 direct vs SA4 modelled #### -----------------------------------
 
