@@ -261,6 +261,32 @@ jsave(filename = paste0("scatter_msbdirectvsmodelled_", rf ,".png"),
 # cleanup
 rm(temp, for_range, st_range, full_plt, nb_plt, b_plt, lay, llegend)
 
+## Barchart - LISA by State ## -------------------------------------------------
+
+modelled_est$summ$sa2 %>% 
+  left_join(.,state_name_concor, by = "ps_state") %>% 
+  mutate(lisa = ifelse(or_EP > 0.9, "H", 
+                       ifelse(or_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
+                             lisa, as.character(LISA)),
+                      levels = c("HH", "H", "L", "LL"))) %>% 
+  filter(!is.na(out)) %>% 
+  ggplot(aes(fill = out, y = as.factor(state_name))) + 
+  theme_bw()+
+  geom_bar(position = "fill")+
+  labs(y = "",
+       x = "",
+       fill = "",
+       title = rf_full)+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))
+
+# save object
+jsave(filename = paste0("bar_lisastate_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
 ## FINISH FOR LOOP #### --------------------------------------------------------
 
 }
