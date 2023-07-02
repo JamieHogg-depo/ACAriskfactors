@@ -102,4 +102,8 @@ irsd_5c <- mutate(global_obj$census,
 
 source("src/wrangle/getSHA.R")
 
+## Load census data ## ---------------------------------------------------------
+
+source("src/wrangle/loadCensusData.R")
+
 ## END SCRIPT ## --------------------------------------------------------------

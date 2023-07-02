@@ -166,10 +166,11 @@ summsa2all %>%
          out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
                              lisa, as.character(LISA)),
                       levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model)) %>% 
+         model = getRFFullNames(model),
+         ra_sa2 = fct_relevel(ra_sa2, "Major Cities")) %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
-  geom_bar(aes(x = out, fill = ra_sa2))+
+  geom_bar(aes(x = out, fill = ra_sa2), position = position_dodge2())+
   facet_wrap(.~model)+
   labs(fill = "",
        x = "",
@@ -183,6 +184,35 @@ jsave(filename = paste0("barchart_lisa_ra.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F, ratio = 9:6)
 
+# cities on yaxis instead
+summsa2all %>% 
+  mutate(lisa = ifelse(or_EP > 0.9, "H", 
+                       ifelse(or_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
+                             lisa, as.character(LISA)),
+                      levels = c("HH", "H", "L", "LL")),
+         model = getRFFullNames(model),
+         ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", "Outer regional\nto very remote", 
+                     as.character(ra_sa2_3c)),
+         levels = c("Major Cities",
+                    "Inner Regional",
+                    "Outer regional\nto very remote"))) %>% 
+  filter(!is.na(out)) %>% 
+  ggplot()+theme_bw()+
+  geom_bar(aes(y = ra, fill = out), position = position_dodge2())+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))
+
+# save object
+jsave(filename = paste0("barchart_lisa_ra2.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F, ratio = 9:6)
+
 # Socioeconomic status
 summsa2all %>% 
   mutate(lisa = ifelse(or_EP > 0.9, "H", 
@@ -192,7 +222,7 @@ summsa2all %>%
          model = getRFFullNames(model)) %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
-  geom_bar(aes(x = out, fill = irsd_5c))+
+  geom_bar(aes(x = out, fill = irsd_5c), position = position_dodge2())+
   facet_wrap(.~model)+
   labs(fill = "",
        x = "",
@@ -205,5 +235,26 @@ summsa2all %>%
 jsave(filename = paste0("barchart_lisa_irsd.png"), 
       base_folder = paste0(base_folder, "/figures"),
       square = F, ratio = 9:6)
+
+## Point estimate ranges ## ----------------------------------------------------
+
+summsa2all %>% 
+  group_by(model, ra_sa2_3c, irsd_5c) %>% 
+  summarise(variance = var(mu_median), .groups = "drop") %>%
+  mutate(model = getRFFullNames(model),
+         ra_sa2_3c = fct_relevel(ra_sa2_3c, "Major Cities")) %>% 
+  ggplot(aes(x = variance, y = ra_sa2_3c, col = irsd_5c))+
+  theme_bw()+
+  geom_jitter()+
+  facet_wrap(.~model)+
+  labs(y = "",
+       col = "",
+       x = "Variance of modelled point estimates")+
+  theme(legend.position = "bottom")
+
+# save object
+jsave(filename = paste0("variance_irsdra.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
 
 ## END SCRIPT #### -------------------------------------------------------------

@@ -144,3 +144,21 @@ addIRSDColor <- function(){
                                "5 - most\nadvantaged"),
                     values = rev(c('#edf8e9','#bae4b3','#74c476','#31a354','#006d2c')))
 }
+
+# converts numbers to proportions
+returnProps <- function(x, y){
+  out <- as.numeric(NA)
+  for(i in 1:length(x)){
+    if(y[i] == 0){
+      out[i] <- 0
+    }else{
+      out[i] <- 100*(x[i]/y[i])
+    }
+  }
+  return(out)
+}
+
+# check percentages are between zero and one
+checkBounds <- function(x){
+  ifelse(x > 100, 100, ifelse(x < 0, 0, x))
+}
