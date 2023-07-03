@@ -2,6 +2,9 @@
 ## summary_fit ## --------------------------------------------------------------
 ## -----------------------------------------------------------------------------
 
+# Source master
+source("src/ms.R")
+
 # Load modelled estimates - nonbenchmarked
 modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport",
                                              pattern = "modelled_est_nb_*", full.names = T), readRDS)
@@ -45,6 +48,17 @@ if(b == 0){
   sf_list$draws$mu_sa4 <- modelled_est[[i]]$mu_sa4 
   sf_list$draws$mu_msb <- modelled_est[[i]]$mu_msb
 }
+
+# PHA level estimates
+this <- aggregate(global_obj$census$N_persons, list(global_obj$census$pha), sum)
+pha_unique <- this[,1]
+this <- this[,2]
+foo <- function(x){
+  aggregate(x*global_obj$census$N_persons, list(global_obj$census$pha), sum)[,2]/this
+}
+pha_draws_mat <- t(pbapply::pbapply(sf_list$draws$mu, 1, foo))
+sf_list$summ$pha <- getMCMCsummary(pha_draws_mat) %>% mutate(pha =pha_unique) %>% relocate(pha)
+rm(this, pha_unique, foo, pha_draws_mat)
 
 # spatially lagged values
 sf_list$draws$mu_spo1 <- (sf_list$draws$mu) %*% W_sparse

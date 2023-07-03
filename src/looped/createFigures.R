@@ -27,10 +27,36 @@ for(k in 1:8){
   
   # load data
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
-  modelled_est_nb <- readRDS(file = paste0("data/summary_files/", rf, "_b0.rds"))
+  #modelled_est_nb <- readRDS(file = paste0("data/summary_files/", rf, "_b0.rds"))
   
 ## Scatter: SHA PHA vs ACA #### ------------------------------------------------
+
+# pha level
+modelled_est$summ$pha %>% 
+    left_join(.,SHA_pha, by = "pha") %>% 
+    ggplot(aes(x = median, xmin = lower, xmax = upper, 
+               y = .data[[sha_vars[1]]], 
+               ymin = .data[[sha_vars[2]]], 
+               ymax = .data[[sha_vars[3]]]))+
+    theme_bw()+
+    geom_errorbar(col = "grey")+
+    geom_errorbarh(col = "grey")+
+    geom_abline()+
+    geom_point()+
+    labs(y = "SHAA (PHA level)",
+         x = "Our estimates (SA2 level)",
+         col = "SES")+
+    ylim(0,1)+xlim(0,1)+
+    theme(legend.position = "bottom")
   
+# save object
+jsave(filename = paste0("scatter_shaphavsaca_pha_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
+}
+  
+# sa2 level
 modelled_est$summ$sa2 %>% 
     left_join(.,SHA_pha, by = "pha") %>% 
     left_join(.,irsd_5c, by = "ps_area") %>% 
@@ -49,7 +75,7 @@ modelled_est$summ$sa2 %>%
          col = "SES")+
     ylim(0,1)+xlim(0,1)+
     theme(legend.position = "bottom")
-  
+
 # save object
 jsave(filename = paste0("scatter_shaphavsaca_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),

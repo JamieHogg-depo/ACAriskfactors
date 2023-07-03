@@ -34,7 +34,7 @@ jsave(filename = paste0("summary_violin.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
   
-## Scatter: Two-way SHA PHA vs ACA  - smoking and obesity #### -----------------
+## Scatter: Two-way SHA PHA vs ACA  - smoking and obesity - SA2 #### -----------
   
   sm <- readRDS(file = paste0("data/summary_files/smoking_b1.rds"))
   ob <- readRDS(file = paste0("data/summary_files/obesity_b1.rds"))
@@ -101,6 +101,61 @@ jsave(filename = paste0("scattersha_smokingobesity.png"),
 # cleanup
 rm(full_plt, sm_plt, ob_plt, lay, llegend)
 
+## Scatter: Two-way SHA PHA vs ACA  - smoking and obesity - PHA #### -----------
+
+sm <- readRDS(file = paste0("data/summary_files/smoking_b1.rds"))
+ob <- readRDS(file = paste0("data/summary_files/obesity_b1.rds"))
+
+## Smoking
+sm_plt <- sm$summ$pha %>% 
+  left_join(.,SHA_pha, by = "pha") %>% 
+  ggplot(aes(x = median, xmin = lower, xmax = upper, 
+             y = shaout_smoking_estimate, 
+             ymin = shaout_smoking_lower, 
+             ymax = shaout_smoking_upper))+
+  theme_bw()+
+  geom_errorbar(col = "grey")+
+  geom_errorbarh(col = "grey")+
+  geom_abline()+
+  geom_point()+
+  labs(y = "SHAA",
+       title = "Current smoking",
+       x = "Our estimates")+
+  ylim(0,1)+xlim(0,1)
+
+## Obesity
+ob_plt <- ob$summ$pha %>% 
+  left_join(.,SHA_pha, by = "pha") %>% 
+  ggplot(aes(x = median, xmin = lower, xmax = upper, 
+             y = shaout_obese_estimate, 
+             ymin = shaout_obese_lower, 
+             ymax = shaout_obese_upper))+
+  theme_bw()+
+  geom_errorbar(col = "grey")+
+  geom_errorbarh(col = "grey")+
+  geom_abline()+
+  geom_point()+
+  labs(y = "SHAA",
+       title = "Obesity",
+       x = "")+
+  ylim(0,1)+xlim(0,1)+
+  theme(legend.position = "none")
+
+## Full plot
+lay <- rbind(c(1),
+             c(2))
+full_plt <- arrangeGrob(grobs = list(ob_plt, sm_plt), 
+                        layout_matrix  = lay)
+
+# save object
+jsave(filename = paste0("scattersha_smokingobesity_pha.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      plot = full_plt,
+      square = T)
+
+# cleanup
+rm(full_plt, sm_plt, ob_plt)
+
 ## Scatter: Non-benchmarked direct estimate ## ---------------------------------
 
 # create list
@@ -157,7 +212,7 @@ jsave(filename = paste0("benchmarkcomp.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
-## Barchart - LISA ## ----------------------------------------------------------
+## Barchart - LISA - RA ## -----------------------------------------------------
 
 # Remoteness
 summsa2all %>% 
@@ -213,6 +268,37 @@ jsave(filename = paste0("barchart_lisa_ra2.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F, ratio = 9:6)
 
+# filled
+summsa2all %>% 
+  mutate(lisa = ifelse(or_EP > 0.9, "H", 
+                       ifelse(or_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
+                             lisa, as.character(LISA)),
+                      levels = c("HH", "H", "L", "LL")),
+         model = getRFFullNames(model),
+         ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", "Outer regional\nto very remote", 
+                            as.character(ra_sa2_3c)),
+                     levels = c("Major Cities",
+                                "Inner Regional",
+                                "Outer regional\nto very remote"))) %>% 
+  filter(!is.na(out)) %>% 
+  ggplot()+theme_bw()+
+  geom_bar(aes(y = ra, fill = out), position = "fill")+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))
+
+# save object
+jsave(filename = paste0("barchart_lisa_ra3.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F, ratio = 9:6)
+
+## Barchart - LISA - SES ## ----------------------------------------------------
+
 # Socioeconomic status
 summsa2all %>% 
   mutate(lisa = ifelse(or_EP > 0.9, "H", 
@@ -233,6 +319,54 @@ summsa2all %>%
 
 # save object
 jsave(filename = paste0("barchart_lisa_irsd.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F, ratio = 9:6)
+
+# Socioeconomic on yaxis instead
+summsa2all %>% 
+  mutate(lisa = ifelse(or_EP > 0.9, "H", 
+                       ifelse(or_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
+                             lisa, as.character(LISA)),
+                      levels = c("HH", "H", "L", "LL")),
+         model = getRFFullNames(model)) %>% 
+  filter(!is.na(out)) %>% 
+  ggplot()+theme_bw()+
+  geom_bar(aes(y = irsd_5c, fill = out), position = position_dodge2())+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))
+
+# save object
+jsave(filename = paste0("barchart_lisa_irsd2.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F, ratio = 9:6)
+
+# Socioeconomic - fill
+summsa2all %>% 
+  mutate(lisa = ifelse(or_EP > 0.9, "H", 
+                       ifelse(or_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
+                             lisa, as.character(LISA)),
+                      levels = c("HH", "H", "L", "LL")),
+         model = getRFFullNames(model)) %>% 
+  filter(!is.na(out)) %>% 
+  ggplot()+theme_bw()+
+  geom_bar(aes(y = irsd_5c, fill = out), position = "fill")+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))
+
+# save object
+jsave(filename = paste0("barchart_lisa_irsd3.png"), 
       base_folder = paste0(base_folder, "/figures"),
       square = F, ratio = 9:6)
 
