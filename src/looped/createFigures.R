@@ -27,7 +27,7 @@ for(k in 1:8){
   
   # load data
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
-  #modelled_est_nb <- readRDS(file = paste0("data/summary_files/", rf, "_b0.rds"))
+  modelled_est_nb <- readRDS(file = paste0("data/summary_files/", rf, "_b0.rds"))
   
 ## Scatter: SHA PHA vs ACA #### ------------------------------------------------
 

@@ -212,16 +212,20 @@ jsave(filename = paste0("benchmarkcomp.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
-## Barchart - LISA - RA ## -----------------------------------------------------
+## Wrangle LISA ## -------------------------------------------------------------
 
-# Remoteness
-summsa2all %>% 
+lisa_df <- summsa2all %>% 
   mutate(lisa = ifelse(or_EP > 0.9, "H", 
                        ifelse(or_EP < 0.1, "L", NA)),
          out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
                              lisa, as.character(LISA)),
-                      levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model),
+                      levels = c("HH", "H", "L", "LL")))
+
+## Barchart - LISA - RA ## -----------------------------------------------------
+
+# Remoteness
+lisa_df %>% 
+  mutate(model = getRFFullNames(model),
          ra_sa2 = fct_relevel(ra_sa2, "Major Cities")) %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
@@ -232,7 +236,8 @@ summsa2all %>%
        y = "")+
   theme(legend.position = "bottom")+
   guides(fill=guide_legend(nrow=2,byrow=TRUE))+
-  addRemotenessColor()
+  addRemotenessColor()+
+  scale_y_continuous(breaks=c(0,250,500))
 
 # save object
 jsave(filename = paste0("barchart_lisa_ra.png"), 
@@ -240,13 +245,8 @@ jsave(filename = paste0("barchart_lisa_ra.png"),
       square = F, ratio = 9:6)
 
 # cities on yaxis instead
-summsa2all %>% 
-  mutate(lisa = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
-                             lisa, as.character(LISA)),
-                      levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model),
+lisa_df %>% 
+  mutate(model = getRFFullNames(model),
          ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", "Outer regional\nto very remote", 
                      as.character(ra_sa2_3c)),
          levels = c("Major Cities",
@@ -261,7 +261,8 @@ summsa2all %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))
+                    breaks = c("HH", "H", "L", "LL")) +
+  scale_x_continuous(breaks=c(0,150,300))
 
 # save object
 jsave(filename = paste0("barchart_lisa_ra2.png"), 
@@ -269,13 +270,8 @@ jsave(filename = paste0("barchart_lisa_ra2.png"),
       square = F, ratio = 9:6)
 
 # filled
-summsa2all %>% 
-  mutate(lisa = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
-                             lisa, as.character(LISA)),
-                      levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model),
+lisa_df %>% 
+  mutate(model = getRFFullNames(model),
          ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", "Outer regional\nto very remote", 
                             as.character(ra_sa2_3c)),
                      levels = c("Major Cities",
@@ -297,15 +293,45 @@ jsave(filename = paste0("barchart_lisa_ra3.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F, ratio = 9:6)
 
+## Barchart - LISA - RA - Population weighted ## -------------------------------
+
+lisa_df %>% 
+  mutate(model = getRFFullNames(model),
+         ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", "Outer regional\nto very remote", 
+                            as.character(ra_sa2_3c)),
+                     levels = c("Major Cities",
+                                "Inner Regional",
+                                "Outer regional\nto very remote")),
+         ww =  2221*8 * N_persons/sum(N_persons)) %>% 
+  group_by(model, ra) %>% 
+  summarise(HH = sum(ww*(out == "HH"), na.rm= T),
+            H = sum(ww*(out == "H"), na.rm= T),
+            L = sum(ww*(out == "L"), na.rm= T),
+            LL = sum(ww*(out == "LL"), na.rm= T),
+            .groups = "drop") %>% 
+  pivot_longer(-c(model, ra)) %>% 
+  mutate(out = factor(name, levels = c("HH", "H", "L", "LL"))) %>% 
+  ggplot()+theme_bw()+
+  geom_col(aes(x = value, y = ra, fill = out), position = position_dodge2())+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))+
+  scale_x_continuous(breaks=c(0,250,500))
+
+# save object
+jsave(filename = paste0("barchart_pwlisa_ra.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F, ratio = 9:6)
+
 ## Barchart - LISA - SES ## ----------------------------------------------------
 
 # Socioeconomic status
-summsa2all %>% 
-  mutate(lisa = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(lisa), lisa, as.character(LISA)),
-                      levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model)) %>% 
+lisa_df %>% 
+  mutate(model = getRFFullNames(model)) %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
   geom_bar(aes(x = out, fill = irsd_5c), position = position_dodge2())+
@@ -314,7 +340,8 @@ summsa2all %>%
        x = "",
        y = "")+
   theme(legend.position = "bottom")+
-  addIRSDColor()
+  addIRSDColor() +
+  scale_y_continuous(breaks=c(0,150,300))
 
 
 # save object
@@ -323,13 +350,8 @@ jsave(filename = paste0("barchart_lisa_irsd.png"),
       square = F, ratio = 9:6)
 
 # Socioeconomic on yaxis instead
-summsa2all %>% 
-  mutate(lisa = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
-                             lisa, as.character(LISA)),
-                      levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model)) %>% 
+lisa_df %>% 
+  mutate(model = getRFFullNames(model)) %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
   geom_bar(aes(y = irsd_5c, fill = out), position = position_dodge2())+
@@ -339,7 +361,8 @@ summsa2all %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))
+                    breaks = c("HH", "H", "L", "LL")) +
+  scale_x_continuous(breaks=c(0,150,300))
 
 # save object
 jsave(filename = paste0("barchart_lisa_irsd2.png"), 
@@ -347,13 +370,8 @@ jsave(filename = paste0("barchart_lisa_irsd2.png"),
       square = F, ratio = 9:6)
 
 # Socioeconomic - fill
-summsa2all %>% 
-  mutate(lisa = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(lisa), 
-                             lisa, as.character(LISA)),
-                      levels = c("HH", "H", "L", "LL")),
-         model = getRFFullNames(model)) %>% 
+lisa_df %>% 
+  mutate(model = getRFFullNames(model)) %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
   geom_bar(aes(y = irsd_5c, fill = out), position = "fill")+
@@ -367,6 +385,35 @@ summsa2all %>%
 
 # save object
 jsave(filename = paste0("barchart_lisa_irsd3.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F, ratio = 9:6)
+
+## Barchart - LISA - SES - Population weighted ## ------------------------------
+
+lisa_df %>% 
+  mutate(model = getRFFullNames(model),
+         ww =  2221*8 * N_persons/sum(N_persons)) %>% 
+  group_by(model, irsd_5c) %>% 
+  summarise(HH = sum(ww*(out == "HH"), na.rm= T),
+            H = sum(ww*(out == "H"), na.rm= T),
+            L = sum(ww*(out == "L"), na.rm= T),
+            LL = sum(ww*(out == "LL"), na.rm= T),
+            .groups = "drop") %>% 
+  pivot_longer(-c(model, irsd_5c)) %>% 
+  mutate(out = factor(name, levels = c("HH", "H", "L", "LL"))) %>% 
+  ggplot()+theme_bw()+
+  geom_col(aes(x = value, y = irsd_5c, fill = out), position = position_dodge2())+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
+                    breaks = c("HH", "H", "L", "LL"))+
+  scale_x_continuous(breaks=c(0,150, 300))
+
+# save object
+jsave(filename = paste0("barchart_pwlisa_irsd.png"), 
       base_folder = paste0(base_folder, "/figures"),
       square = F, ratio = 9:6)
 
@@ -388,6 +435,35 @@ summsa2all %>%
 
 # save object
 jsave(filename = paste0("variance_irsdra.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
+## Indigenous status ####-------------------------------------------------------
+
+summsa2all %>% 
+  left_join(.,indig, by = "SA2") %>% 
+  mutate(over20 = factor(case_when(
+    Indigenous >= 20 ~ ">=20%",
+    Indigenous >=10 &  Indigenous<20 ~ "10%-20%",
+    Indigenous <10 ~ "<10%"),
+    levels = c("<10%","10%-20%", ">=20%")),
+    model = getRFFullNames(model)) %>% 
+  filter(!is.na(over20)) %>% 
+  ggplot(aes(x = mu_median,
+             fill = over20,
+             y = model))+
+  theme_bw()+
+  geom_violin(draw_quantiles = c(0.25,0.5,0.75))+
+  labs(y = "",
+       x = "Posterior medians",
+       fill = "Proportion of\nFirst Nations\nAustralians")+
+  scale_y_discrete(limits=rev)+
+  scale_fill_manual(values = c("white", "skyblue", "royalblue"),
+                    breaks = c("<10%","10%-20%", ">=20%"))+
+  theme(legend.position = "right")
+
+# save object
+jsave(filename = paste0("boxplot_fna.png"), 
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
