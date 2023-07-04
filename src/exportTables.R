@@ -46,6 +46,28 @@ temp_df %>% dplyr::select(1:5) %>% write.csv("out/tables/national_state_direct1.
 temp_df %>% dplyr::select(1, 6:9) %>% write.csv("out/tables/national_state_direct2.csv")
 rm(temp_df, column_of_direct)
 
+## MAIN: Table 3: Evidence classification ## -----------------------------------
+
+summsa2all %>% 
+  mutate(ec = ifelse(or_EP > 0.9, "H", 
+                     ifelse(or_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA) & !is.na(ec), 
+                             ec, as.character(LISA)),
+                      levels = c("HH", "H", "L", "LL")),
+         model = getRFFullNames(model)) %>% 
+  mutate(ww =  2221*8 * N_persons/sum(N_persons)) %>% 
+  group_by(model) %>% 
+  summarise(HH = sum(ww*(out == "HH"), na.rm= T),
+            H = sum(ww*(out == "H"), na.rm= T),
+            L = sum(ww*(out == "L"), na.rm= T),
+            LL = sum(ww*(out == "LL"), na.rm= T),
+            .groups = "drop") %>% 
+  mutate(tot = HH + H + L + LL) %>% 
+  relocate(model, tot) %>% 
+  make_numeric_decimal(digits = 0) %>% 
+  setNames(c("", "", names(.)[-c(1:2)])) %>% 
+  write.csv("out/tables/ec.csv")
+
 ## MAIN: Table 3: LISA_ra ## ---------------------------------------------------
 
 # setup list
@@ -149,6 +171,68 @@ bind_rows(ll) %>%
 
 # cleanup
 rm(ll, rf, modelled_est, k, temp)
+
+## SUPP Table: Benchmarking comparison ## --------------------------------------
+
+# setup list
+ll <- list()
+
+# for loop
+for(k in 1:8){
+  
+  rf <- names(raw_est)[k]
+  message("Started ", k, ": ", rf)
+  
+  # load data
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  modelled_est_nb <- readRDS(file = paste0("data/summary_files/", rf, "_b0.rds"))
+  
+  # mu
+  mu <- data.frame(nb = modelled_est_nb$summ$sa2$mu_median, 
+                   b = modelled_est$summ$sa2$mu_median) %>% 
+    bind_cols(.,modelled_est$summ$sa2) %>%
+    filter(ra_sa2 != "Very Remote",
+           ps_state != 7)
+  
+  # cisize
+  cisize <- data.frame(nb = modelled_est_nb$summ$sa2$mu_cisize, 
+                       b = modelled_est$summ$sa2$mu_cisize) %>% 
+    bind_cols(.,modelled_est$summ$sa2) %>%
+    filter(ra_sa2 != "Very Remote",
+           ps_state != 7) %>% 
+    mutate(r = nb/b) %>% # over 1 means nb is less certain
+    dplyr::select(b, nb, r)
+  
+  ll[[k]] <- data.frame(rf = rf,
+                        MARD = with(mu, mean(abs(nb - b)/b)),
+                        m = median(cisize$r),
+                        p25 = unname(quantile(cisize$r, probs = 0.25)),
+                        p75 = unname(quantile(cisize$r, probs = 0.75)))
+  
+  this <- data.frame(nb = modelled_est_nb$summ$sa2$mu_cisize, 
+                     b = modelled_est$summ$sa2$mu_cisize) %>% 
+    bind_cols(.,modelled_est$summ$sa2) %>%
+    filter(ra_sa2 != "Very Remote",
+           ps_state != 7) %>% 
+    mutate(r = b/nb,
+           r_c = cut_number(r, 20, labels = FALSE)) %>% # over 1 means nb is less certain
+    filter(r_c == 20) %>% 
+    dplyr::select(b, nb, r, N_persons, r_c)
+  
+  message("Top 5%: N_persons ", round(median(this$N_persons),2), "(",
+          round(quantile(this$N_persons, probs = 0.25),2), ", ",
+          round(quantile(this$N_persons, probs = 0.75),2), ")")
+  
+}
+
+bind_rows(ll) %>% 
+  mutate(MARD = 10*MARD) %>% 
+  make_numeric_decimal(digits = 2) %>% 
+  mutate(out = paste0(m, " (", p25, ", ", p75, ")"),
+         rf = getRFFullNames(rf)) %>% 
+  dplyr::select(rf, MARD, out) %>% 
+  setNames(c("", "MARD", "Median (IQR) of relative reduction in width of HDIs")) %>% 
+  write.csv("out/tables/benchmark_comp.csv")
 
 ## SUPP Table 6-7: Model Building ## -------------------------------------------
 
