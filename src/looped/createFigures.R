@@ -43,18 +43,17 @@ modelled_est$summ$pha %>%
     geom_errorbarh(col = "grey")+
     geom_abline()+
     geom_point()+
-    labs(y = "SHAA (PHA level)",
-         x = "Our estimates (SA2 level)",
+    labs(y = "Social Health Atlas",
+         x = "Our estimates",
          col = "SES")+
-    ylim(0,1)+xlim(0,1)+
+    coord_obs_pred()+
+    #ylim(0,1)+xlim(0,1)+
     theme(legend.position = "bottom")
   
 # save object
 jsave(filename = paste0("scatter_shaphavsaca_pha_", rf ,".png"), 
       base_folder = paste0(base_folder, "/figures"),
       square = F)
-
-}
   
 # sa2 level
 modelled_est$summ$sa2 %>% 
