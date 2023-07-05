@@ -312,6 +312,42 @@ jsave(filename = paste0("bar_lisastate_", rf ,".png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
+## Binned prevalence ## ------------------------------------------------
+
+# IRSD
+modelled_est$summ$sa2 %>% 
+  left_join(.,irsd_5c, by = "ps_area") %>% 
+  mutate(c = cut_number(mu_median, 10, labels = FALSE)) %>% 
+  ggplot(aes(x = as.factor(c), fill = irsd_5c))+
+  theme_bw()+
+  geom_bar(position = "fill")+
+  addIRSDColor()+
+  labs(y = "",
+       x = "Prevalence point estimates (Percentiles)",
+       fill = "")
+
+# save object
+jsave(filename = paste0("binnedprev_irsd_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
+# Remoteness
+modelled_est$summ$sa2 %>% 
+  mutate(c = cut_number(mu_median, 10, labels = FALSE),
+         ra_sa2 = fct_relevel(ra_sa2, "Major Cities")) %>% 
+  ggplot(aes(x = as.factor(c), fill = ra_sa2))+
+  theme_bw()+
+  geom_bar(position = "fill")+
+  addRemotenessColor()+
+  labs(y = "",
+       x = "Prevalence point estimates (Percentiles)",
+       fill = "")
+
+# save object
+jsave(filename = paste0("binnedprev_ra_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
 ## FINISH FOR LOOP #### --------------------------------------------------------
 
 }
