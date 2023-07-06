@@ -98,6 +98,17 @@ irsd_5c <- mutate(global_obj$census,
        )) %>% 
   dplyr::select(ps_area, irsd_5c)
 
+# Full names
+lookup <- data.frame(rf = names(raw_est),
+                     rf_full = c("Leisure physical activity",
+                                 "All physical activity",
+                                 "Alcohol",
+                                 "Diet",
+                                 "Obesity",
+                                 "Overweight",
+                                 "Current smoking",
+                                 "Risky waist circumference"))
+
 ## Load PHA SHA data ## --------------------------------------------------------
 
 source("src/wrangle/getSHA.R")

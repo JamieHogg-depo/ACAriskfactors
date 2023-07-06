@@ -4,16 +4,6 @@
 
 source("src/ms.R")
 
-lookup <- data.frame(rf = names(raw_est),
-                     rf_full = c("Leisure physical activity",
-                                 "All physical activity",
-                                 "Alcohol",
-                                 "Diet",
-                                 "Obesity",
-                                 "Overweight",
-                                 "Current smoking",
-                                 "Risky waist circumference"))
-
 ## SAMPLED #### ----------------------------------------------------------------
 
 # base map
@@ -133,35 +123,6 @@ jsave(filename = paste0("irsd.png"),
 rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
 message("---- Finished irsd")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## First Nations Australians #### ----------------------------------------------
 
 # base map
@@ -229,31 +190,6 @@ jsave(filename = paste0("fna.png"),
 # cleanup
 rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
 message("---- Finished fna")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ## START FOR LOOP #### ---------------------------------------------------------
 for(k in 1:8){
@@ -405,7 +341,7 @@ message("---- Finished prevalence cisize")
 
 ## ODDS RATIOS #### ------------------------------------------------------------
 
-# SETUP
+# SETUP - use 2 instead!
 cut_offs <- c(1/1.5, 1.5)
 mapping_data <- modelled_est$summ$sa2_map %>% 
   mutate() %>%
@@ -491,6 +427,13 @@ message("---- Finished ors")
 mapping_data <- modelled_est$summ$sa2_map %>% 
   mutate(or_EP = ifelse(or_EP == 0, 0.001, or_EP),
          or_EP = ifelse(or_EP == 1, 0.999, or_EP))
+
+# scale_fill_gradientn(colors = c("#008837", "#a6dba0", "white","white","white", "#c2a5cf", "#7b3294"),
+#                      limits = c(-0.0000001,1.0000001),
+#                      #oob = squish,
+#                      #trans = "logit",
+#                      breaks = c(0,0.2,0.35,0.5,0.65,0.8,1),
+#                      labels = as.character(c(0,0.2,"",0.5,"",0.8,1)))
 
 # base map
 base <- mapping_data %>% 
