@@ -55,20 +55,20 @@ map_sa2 <- map_sa2_full %>%
   left_join(.,global_obj$area_concor, by = "SA2")
 
 # Australia outline
-aus_border <- map_sa2 %>% 
+aus_border <- suppressMessages(map_sa2 %>% 
   summarise(geometry = st_union(geometry)) %>% 
   st_as_sf() %>%
-  st_transform(4326)
+  st_transform(4326))
 
 # State outline
-state_border <- map_sa2 %>% 
+state_border <- suppressMessages(map_sa2 %>% 
   mutate(state = str_sub(SA2, 1, 1)) %>% 
   group_by(state, STATE_NAME) %>% 
   summarise(geometry = st_union(geometry), .groups = "drop") %>% 
   filter(!st_is_empty(.)) %>% 
   #mutate(st_init = c("NSW", "VIC", "QLD", "SA", "WA", NA, "NT", NA)) %>% 
   st_as_sf() %>%
-  st_transform(4326)
+  st_transform(4326))
 
 ## Other code ## --------------------------------------------------------------
 
@@ -90,11 +90,11 @@ lims <- data.frame(
 # quantiles for IRSD
 irsd_5c <- mutate(global_obj$census, 
        irsd_5c = case_when(
-         ABS_irsd_decile_nation_complete %in% c("1", "2") ~ "1 - least\nadvantaged",
+         ABS_irsd_decile_nation_complete %in% c("1", "2") ~ "1 - most\ndisadvantaged",
          ABS_irsd_decile_nation_complete %in% c("3", "4") ~ "2",
          ABS_irsd_decile_nation_complete %in% c("5", "6") ~ "3",
          ABS_irsd_decile_nation_complete %in% c("7", "8") ~ "4",
-         ABS_irsd_decile_nation_complete %in% c("9", "10") ~ "5 - most\nadvantaged"
+         ABS_irsd_decile_nation_complete %in% c("9", "10") ~ "5 - least\ndisadvantaged"
        )) %>% 
   dplyr::select(ps_area, irsd_5c)
 
@@ -104,6 +104,20 @@ lookup <- data.frame(rf = names(raw_est),
                                  "All physical activity",
                                  "Alcohol",
                                  "Diet",
+                                 "Obesity",
+                                 "Overweight",
+                                 "Current smoking",
+                                 "Risky waist circumference"))
+
+# Full names2
+lookup <- data.frame(rf = names(raw_est),
+                     sha = c("exercise", "exercise", "alcohol", 
+                             "fruit", "obese", "overweight",
+                             "smoking", "overweight"),
+                     rf_full = c("Inadequate physical activity (leisure)",
+                                 "Inadequate physical activity (all)",
+                                 "Risky alcohol consumption",
+                                 "Inadequate diet",
                                  "Obesity",
                                  "Overweight",
                                  "Current smoking",

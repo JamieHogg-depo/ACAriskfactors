@@ -4,11 +4,6 @@
 
 source("src/ms.R")
 
-lookup <- data.frame(rf = names(raw_est),
-                     sha = c("exercise", "exercise", "alcohol", 
-                             "fruit", "obese", "overweight",
-                             "smoking", "overweight"))
-
 ## Violin plots ## -------------------------------------------------------------
 
 ll <- list()
@@ -44,7 +39,7 @@ jsave(filename = paste0("summary_violin.png"),
 ## Smoking
   sm_plt <- sm$summ$sa2 %>% 
     left_join(.,SHA_pha, by = "pha") %>% 
-    mutate(irsd_5c = irsd_5c) %>% 
+    left_join(.,irsd_5c, by = "ps_area") %>% 
     ggplot(aes(x = mu_median, xmin = mu_lower, xmax = mu_upper, 
                y = shaout_smoking_estimate, 
                ymin = shaout_smoking_lower, 
@@ -68,7 +63,7 @@ jsave(filename = paste0("summary_violin.png"),
 ## Obesity
   ob_plt <- ob$summ$sa2 %>% 
     left_join(.,SHA_pha, by = "pha") %>% 
-    mutate(irsd_5c = irsd_5c) %>% 
+    left_join(.,irsd_5c, by = "ps_area") %>% 
     ggplot(aes(x = mu_median, xmin = mu_lower, xmax = mu_upper, 
                y = shaout_obese_estimate, 
                ymin = shaout_obese_lower, 
@@ -104,9 +99,6 @@ jsave(filename = paste0("scattersha_smokingobesity.png"),
 rm(full_plt, sm_plt, ob_plt, lay, llegend)
 
 ## Scatter: Two-way SHA PHA vs ACA  - smoking and obesity - PHA #### -----------
-
-sm <- readRDS(file = paste0("data/summary_files/smoking_b1.rds"))
-ob <- readRDS(file = paste0("data/summary_files/obesity_b1.rds"))
 
 ## Smoking
 sm_plt <- sm$summ$pha %>% 
@@ -156,7 +148,7 @@ jsave(filename = paste0("scattersha_smokingobesity_pha.png"),
       square = T)
 
 # cleanup
-rm(full_plt, sm_plt, ob_plt)
+rm(full_plt, sm_plt, ob_plt, sm, ob)
 
 ## Scatter: Non-benchmarked direct estimate ## ---------------------------------
 
@@ -257,7 +249,6 @@ summsa2all %>%
   scale_y_discrete(limits=rev) + 
   scale_fill_manual(values = c("skyblue", "royalblue", "purple"),
                     breaks = c("<10%","10%-20%", ">=20%"))
-  theme(legend.position = "right")
 
 # save object
 jsave(filename = paste0("boxplot_fna.png"), 

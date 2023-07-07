@@ -15,7 +15,7 @@ for(k in 1:8){
 }
 
 # finalise and save
-sa2_all <- bind_rows(ll) %>% mutate(irsd_5c = rep(irsd_5c, 8))
+sa2_all <- bind_rows(ll) %>% left_join(.,irsd_5c, by = "ps_area")
 saveRDS(sa2_all, "data/summary_files/summsa2all.Rds")
 
 ## Create shapefile versions ## ------------------------------------------------

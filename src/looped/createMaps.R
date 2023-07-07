@@ -4,6 +4,86 @@
 
 source("src/ms.R")
 
+## Sydney Habour Cut Out - alcohol ## ------------------------------------------
+
+SyndeyCutOut <- data.frame(
+  xmin = c(151.1242),
+  xmax = c(151.317),
+  ymin = -c(33.906),
+  ymax = -c(33.772)
+)
+
+# SETUP
+modelled_est <- readRDS(file = paste0("data/summary_files/alcohol_b1.rds"))
+mapping_data <- modelled_est$summ$sa2_map %>% 
+  mutate(or_EP = ifelse(or_EP == 0, 0.001, or_EP),
+         or_EP = ifelse(or_EP == 1, 0.999, or_EP))
+
+# base map
+base <- mapping_data %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = or_EP), col = NA)+
+  scale_fill_gradientn(colors = c("#008837", "#a6dba0", "white","white","white", "#c2a5cf", "#7b3294"),
+                       limits = c(-0.0000001,1.0000001),
+                       #oob = squish,
+                       #trans = "logit",
+                       breaks = c(0,0.2,0.25,0.5,0.75,0.8,1),
+                       labels = as.character(c(0,0.2,"",0.5,"",0.8,1)))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "right",
+        panel.background = element_rect(fill = "lightblue"),
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"),
+        panel.border = element_rect(colour = "black", size=1, fill=NA))+
+  labs(fill = "Exceedance\nprobability")+
+  xlim(SyndeyCutOut$xmin[1], SyndeyCutOut$xmax[1]) +
+  ylim(SyndeyCutOut$ymin[1], SyndeyCutOut$ymax[1])
+
+# Income
+income <- modelled_est$summ$sa2_map %>% 
+  left_join(.,averages, by = "SA2") %>% 
+  mutate(inc = cut_number(Median_tot_prsnl_inc_weekly, 20, label = F)*5) %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = inc), col = NA)+
+  scale_fill_viridis_c(begin = 0, end = 1, 
+                       direction = 1,
+                       option = "F")+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "right",
+        panel.background = element_rect(fill = "lightblue"),
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"),
+        panel.border = element_rect(colour = "black", size=1, fill=NA))+
+  labs(fill = "Personal\nincome\n(percentile)")+
+  xlim(SyndeyCutOut$xmin[1], SyndeyCutOut$xmax[1]) +
+  ylim(SyndeyCutOut$ymin[1], SyndeyCutOut$ymax[1])
+
+# create final list
+lay <- rbind(c(1),
+             c(2))
+full_inset_plt <- arrangeGrob(grobs = list(base, income), 
+                              layout_matrix  = lay)
+
+# save object
+jsave(filename = paste0("sydney_cutout.png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt,
+      square = F)
+
+# cleanup
+rm(base, income, lay, full_inset_plt)
+message("---- Finished sydney cutout")
+
 ## SAMPLED #### ----------------------------------------------------------------
 
 # base map
@@ -204,7 +284,7 @@ for(k in 1:8){
 ## PREVALENCE #### -------------------------------------------------------------
 
 # squish the top and lower 2.5 quantiles
-rr <- unname(quantile(modelled_est$summ$sa2$mu_median, p = c(0.025,0.975)))
+rar<- unname(quantile(modelled_est$summ$sa2$mu_median, p = c(0.01,0.99)))
   
 # base map
 base <- modelled_est$summ$sa2_map %>% 
@@ -214,7 +294,7 @@ base <- modelled_est$summ$sa2_map %>%
   scale_fill_viridis_c(begin = 0, end = 1, 
                        direction = -1,
                        option = "F", 
-                       limits = rr, oob = squish)+
+                       limits = rar, oob = squish)+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
@@ -342,7 +422,7 @@ message("---- Finished prevalence cisize")
 ## ODDS RATIOS #### ------------------------------------------------------------
 
 # SETUP - use 2 instead!
-cut_offs <- c(1/1.5, 1.5)
+cut_offs <- c(1/2, 2)
 mapping_data <- modelled_est$summ$sa2_map %>% 
   mutate() %>%
   mutate(or_median = ifelse(or_median > cut_offs[2], cut_offs[2], or_median),
@@ -350,8 +430,8 @@ mapping_data <- modelled_est$summ$sa2_map %>%
 
 # define fill colours
 Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
-End <- log(1.6)
-Breaks.fill <- c(1/1.5, 1/1.25, 1, 1.25, 1.5)
+End <- log(2.1)
+Breaks.fill <- c(1/2, 1/1.5, 1, 1.5, 2)
 Fill.values <- c(-End, log(Breaks.fill), End)
 
 # base map
@@ -428,25 +508,17 @@ mapping_data <- modelled_est$summ$sa2_map %>%
   mutate(or_EP = ifelse(or_EP == 0, 0.001, or_EP),
          or_EP = ifelse(or_EP == 1, 0.999, or_EP))
 
-# scale_fill_gradientn(colors = c("#008837", "#a6dba0", "white","white","white", "#c2a5cf", "#7b3294"),
-#                      limits = c(-0.0000001,1.0000001),
-#                      #oob = squish,
-#                      #trans = "logit",
-#                      breaks = c(0,0.2,0.35,0.5,0.65,0.8,1),
-#                      labels = as.character(c(0,0.2,"",0.5,"",0.8,1)))
-
 # base map
 base <- mapping_data %>% 
   ggplot()+
   theme_void()+
   geom_sf(aes(fill = or_EP), col = NA)+
-  scale_fill_distiller(palette = "PRGn",
+  scale_fill_gradientn(colors = c("#008837", "#a6dba0", "white","white","white", "#c2a5cf", "#7b3294"),
                        limits = c(-0.0000001,1.0000001),
-                       direction = -1,
                        #oob = squish,
                        #trans = "logit",
-                       breaks = c(0,0.2,0.5,0.8,1),
-                       labels = as.character(c(0,0.2,0.5,0.8,1)))+
+                       breaks = c(0,0.2,0.25,0.5,0.75,0.8,1),
+                       labels = as.character(c(0,0.2,"",0.5,"",0.8,1)))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
@@ -503,6 +575,162 @@ jsave(filename = paste0("orep_", rf ,".png"),
 # cleanup
 rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
 message("---- Finished or eps")
+
+## RR #### ---------------------------------------------------------------------
+
+# get best range
+col_out <- getBestRRCutPoint(modelled_est$summ$sa2_map$rr_median, cut_prob = 0.05)
+
+# SETUP
+cut_offs <- c(1/col_out$cut_point, col_out$cut_point)
+mapping_data <- modelled_est$summ$sa2_map %>% 
+  mutate() %>%
+  mutate(rr_median = ifelse(rr_median > cut_offs[2], cut_offs[2], rr_median),
+         rr_median = ifelse(rr_median < cut_offs[1], cut_offs[1], rr_median))
+
+# define fill colours
+Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
+End <- col_out$End
+Breaks.fill <- col_out$Breaks.fill
+Fill.values <-col_out$Fill.values
+
+# base map
+base <- mapping_data %>% 
+  ggplot(aes(fill = log(rr_median)))+
+  theme_void()+
+  geom_sf(col = NA)+
+  scale_fill_gradientn(colors = Fill.colours,
+                       values = rescale(Fill.values),
+                       labels = as.character(round(Breaks.fill, 2)),
+                       breaks = log(Breaks.fill),
+                       limits = range(Fill.values))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Rate Ratio")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob(rf_full,gp=gpar(fontsize=10)))
+
+# save plot
+jsave(filename = paste0("rr_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
+message("---- Finished rrs")
+
+## Counts #### -----------------------------------------------------------------
+
+# squish the top and lower 1 quantiles
+rar<- unname(quantile(modelled_est$summ$sa2$count_median/1000, p = c(0.01,0.99)))
+
+# base map
+base <- modelled_est$summ$sa2_map %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = count_median/1000), col = NA)+
+  scale_fill_viridis_c(begin = 0.3, end = 1, 
+                       direction = -1,
+                       option = "B", 
+                       limits = rar, oob = squish)+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Count (x1000)")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob(rf_full,gp=gpar(fontsize=10)))
+
+# save plot
+jsave(filename = paste0("count_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished counts")
 
 ## LISA #### -------------------------------------------------------------------
 

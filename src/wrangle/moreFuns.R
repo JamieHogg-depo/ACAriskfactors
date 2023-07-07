@@ -115,20 +115,20 @@ getRFFullNames <- function(x){
     x == "smoking" ~ "Current smoking",
     x == "overweight" ~ "Overweight",
     x == "obesity" ~ "Obesity",
-    x == "diet" ~ "Diet",
-    x == "alcohol" ~ "Alcohol",
-    x == "activityleis" ~ "Leisure physical\nactivity",
-    x == "activityleiswkpl" ~ "All physical\nactivity"
+    x == "diet" ~ "Inadequate\ndiet",
+    x == "alcohol" ~ "Risky\nalcohol\nconsumption",
+    x == "activityleis" ~ "Inadequate\nactivity\n(leisure)",
+    x == "activityleiswkpl" ~ "Inadequate\nactivity\n(all)"
   )
   return(factor(temp, 
                 levels = c("Current smoking",
-                "Alcohol",
-                "Diet",
+                "Risky\nalcohol\nconsumption",
+                "Inadequate\ndiet",
                 "Obesity",
                 "Overweight",
                 "Risky waist\ncircumference",
-                "Leisure physical\nactivity",
-                "All physical\nactivity")))
+                "Inadequate\nactivity\n(leisure)",
+                "Inadequate\nactivity\n(all)")))
 }
 
 # Adds correct color scale to ra_sa2
@@ -140,8 +140,8 @@ addRemotenessColor <- function(){
 
 # Adds correct color scale to irsd_5c
 addIRSDColor <- function(){
-  scale_fill_manual(breaks = c("1 - least\nadvantaged", "2", "3", "4",
-                               "5 - most\nadvantaged"),
+  scale_fill_manual(breaks = c("1 - most\ndisadvantaged", "2", "3", "4",
+                               "5 - least\ndisadvantaged"),
                     values = rev(c('#edf8e9','#bae4b3','#74c476','#31a354','#006d2c')))
 }
 
@@ -161,6 +161,37 @@ returnProps <- function(x, y){
 # check percentages are between zero and one
 checkBounds <- function(x){
   ifelse(x > 100, 100, ifelse(x < 0, 0, x))
+}
+
+#' @title getBestRRCutPoint
+#' @description Will always return the upper cut point
+getBestRRCutPoint <- function(x, cut_prob = 0.01){
+  
+  # get 95% range
+  rar <- unname(quantile(x, probs = c(cut_prob, 1-cut_prob), na.rm=T))
+  diff_from_1 <- c(1-rar[1], rar[2]-1)
+  
+  # get split depending on which bound
+  if(diff_from_1[1] < diff_from_1[2]){
+    cut_point <- ceiling(rar[2]*100)/100
+  }else{
+    cut_point <- round(1/(floor(rar[1]*100)/100),2)
+  }
+  
+  drp <- sum((x > cut_point | x < 1/cut_point), na.rm = T)
+  
+  # return objects
+  message("Cut point will suppress ", drp, " data points.")
+  End = log(round(cut_point, 1))
+  Breaks.fill = c(seq(1/cut_point,1, length.out = 3)[-3], 1, seq(1,cut_point, length.out = 3)[-1])
+  Fill.values = c(-End, log(Breaks.fill), End)
+  return(list(
+    cut_point = cut_point,
+    End = End,
+    Breaks.fill = Breaks.fill,
+    Fill.values = Fill.values
+  ))
+  
 }
 
 ## Reference from https://rdrr.io/github/tidymodels/tune/src/R/coord_obs_pred.R

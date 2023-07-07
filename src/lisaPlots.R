@@ -4,12 +4,6 @@
 
 source("src/ms.R")
 
-lookup <- data.frame(rf = names(raw_est),
-                     sha = c("exercise", "exercise", "alcohol", 
-                             "fruit", "obese", "overweight",
-                             "smoking", "overweight"))
-
-
 ## Wrangle ## ------------------------------------------------------------------
 
 ec_df <- summsa2all %>% 
@@ -405,7 +399,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_npw_cf.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 # color: EC
@@ -424,7 +418,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_npw_cec.png.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 # filled
@@ -442,7 +436,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barfill_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 ## Barchart - RA - Population weighted ## --------------------------------------
@@ -461,13 +455,13 @@ ec_ra %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_pw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 ## Barchart - SES ## -----------------------------------------------------------
 
 # Socioeconomic status
-lisa_df %>% 
+ec_df %>% 
   filter(!is.na(out)) %>% 
   ggplot()+theme_bw()+
   geom_bar(aes(y = out, fill = irsd_5c), position = position_dodge2())+
@@ -482,7 +476,7 @@ lisa_df %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_npw_cf.png.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 # Socioeconomic on yaxis instead
@@ -501,7 +495,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 # Socioeconomic - fill
@@ -519,7 +513,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barfill_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures"),
+      base_folder = paste0(base_folder, "/figures/ec"),
       square = F, ratio = 9:6)
 
 ## END SCRIPT #### -------------------------------------------------------------

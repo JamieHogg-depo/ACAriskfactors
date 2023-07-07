@@ -4,19 +4,6 @@
 
 source("src/ms.R")
 
-lookup <- data.frame(rf = names(raw_est),
-                     sha = c("exercise", "exercise", "alcohol", 
-                             "fruit", "obese", "overweight",
-                             "smoking", "overweight"),
-                     rf_full = c("Leisure physical activity",
-                                 "All physical activity",
-                                 "Alcohol",
-                                 "Diet",
-                                 "Obesity",
-                                 "Overweight",
-                                 "Current smoking",
-                                 "Risky waist circumference"))
-
 ## START FOR LOOP #### ---------------------------------------------------------
 for(k in 1:8){
   
@@ -85,9 +72,9 @@ jsave(filename = paste0("scatter_shaphavsaca_", rf ,".png"),
 seifa <- modelled_est$summ$sa2 %>% 
   mutate(ABS_irsd_decile_nation_complete = factor(ABS_irsd_decile_nation_complete, 
                                                   levels = 1:10,
-                                         labels = c("Least\nadvantaged", 
+                                         labels = c("Most\ndisadvantaged", 
                                                     as.character(2:9), 
-                                                    "Most\nadvantaged"))) %>% 
+                                                    "Least\ndisadvantaged"))) %>% 
   ggplot(aes(x = mu_median,
              y = ABS_irsd_decile_nation_complete))+
   theme_bw()+
@@ -324,7 +311,8 @@ modelled_est$summ$sa2 %>%
   addIRSDColor()+
   labs(y = "",
        x = "Prevalence point estimates (Percentiles)",
-       fill = "")
+       fill = "",
+       title = rf_full)
 
 # save object
 jsave(filename = paste0("binnedprev_irsd_", rf ,".png"), 
@@ -341,7 +329,8 @@ modelled_est$summ$sa2 %>%
   addRemotenessColor()+
   labs(y = "",
        x = "Prevalence point estimates (Percentiles)",
-       fill = "")
+       fill = "",
+       title = rf_full)
 
 # save object
 jsave(filename = paste0("binnedprev_ra_", rf ,".png"), 
