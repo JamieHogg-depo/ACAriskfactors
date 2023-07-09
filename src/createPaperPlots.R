@@ -227,7 +227,26 @@ jsave(filename = paste0("variance_irsdra.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
-## Indigenous status ####-------------------------------------------------------
+## PC1 vs IRSD #### ------------------------------------------------------------
+
+global_obj$census %>% 
+  mutate(pc1_c = cut_number(PC1, 5, labels = FALSE),
+         ABS_irsd_decile_nation_complete = factor(ABS_irsd_decile_nation_complete, 
+                                                  levels = 1:10,
+                                                  labels = c("Most\ndisadvantaged", 
+                                                             as.character(2:9), 
+                                                             "Least\ndisadvantaged"))) %>% 
+  ggplot(aes(x = PC1, y = ABS_irsd_decile_nation_complete))+
+  theme_bw()+
+  geom_violin()+
+  labs(y = "")
+
+# save object
+jsave(filename = paste0("pc1_vs_irsd.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
+## Indigenous status #### ------------------------------------------------------
 
 summsa2all %>% 
   left_join(.,indig, by = "SA2") %>% 
