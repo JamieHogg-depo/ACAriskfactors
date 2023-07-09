@@ -582,7 +582,7 @@ message("---- Finished or eps")
 col_out <- getBestRRCutPoint(modelled_est$summ$sa2_map$rr_median, cut_prob = 0.05)
 
 # SETUP
-cut_offs <- c(1/col_out$cut_point, col_out$cut_point)
+cut_offs <- col_out$cut_offs
 mapping_data <- modelled_est$summ$sa2_map %>% 
   mutate() %>%
   mutate(rr_median = ifelse(rr_median > cut_offs[2], cut_offs[2], rr_median),
@@ -590,7 +590,6 @@ mapping_data <- modelled_est$summ$sa2_map %>%
 
 # define fill colours
 Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
-End <- col_out$End
 Breaks.fill <- col_out$Breaks.fill
 Fill.values <-col_out$Fill.values
 
