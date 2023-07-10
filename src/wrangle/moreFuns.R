@@ -1,5 +1,7 @@
 # More funs
 
+source('src/wrangle/getWavePlotVars.R')
+
 # simple function to streamline the saving of plots
 jsave <- function(filename, base_folder, 
                   plot = last_plot(), 

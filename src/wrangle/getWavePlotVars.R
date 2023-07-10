@@ -1,13 +1,18 @@
 #' @title getWavePlotVars
 #' @param draws matrix (iterations x observations) of posterior draws
-#' @param verbose (defaults to FALSE) reports progress of operation
+#' @param prefix (defaults to "") character vector that will be appended to 
+#' the start of the column names. 
+#' @param verbose (defaults to FALSE) reports progress of operation.
 #' @param truncation_upper (defaults to 4) truncation of density approximation of 
 #' ratios. With a value of 4, density evaluations above 4 and below 1/4 are removed. 
 #' @returns Dataframe (observations x 2) with `xValues` and `yValues`
 #' #' WARNING: Only use with relative measures where 1 is a meaningful middle value. 
-#' #' NOTE: `draws` should not be log-transformed - the function will perform this action.
-getWavePlotVars <- function(draws, verbose = FALSE, truncation_upper = 4){
+#' #' NOTE: `draws` should NOT be log-transformed - the function will perform this action.
+getWavePlotVars <- function(draws, prefix = "", verbose = FALSE, truncation_upper = 4){
 
+if(any(draws < 0))
+  stop(paste0("Ensure all values in `", deparse(substitute(draws)), "` are positive..."))
+  
 # create empty data.frame
 temp.wave <- NULL
 
@@ -101,6 +106,6 @@ temp.wave <- cbind(temp1, temp2)
 colnames(temp.wave) <- c("xValues", "yValues")
 
 # return dataframe
-return(temp.wave)
+return(as.data.frame(temp.wave) %>% setNames(paste0(prefix, names(.))))
 
 }

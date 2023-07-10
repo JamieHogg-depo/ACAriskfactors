@@ -50,6 +50,7 @@ for(k in 1:8){
   
   # load data
   modelled_est <- readRDS(file = paste0("data/DataLabExport/modelled_est_", rf, ".rds"))
+  modelled_est$rr <- modelled_est$mu/raw_est[[k]]$national[1]
   
   # get mu quantiles
   mu_quants <- bind_rows(lapply(asplit(modelled_est$mu, 2), 
@@ -66,6 +67,20 @@ for(k in 1:8){
                                 quantile, p = c(0.1,0.2,0.5,0.8,0.9), na.rm = T)) %>% 
     setNames(paste0("or_", c("logp10", "logp20", "logp50", "logp80", "logp90")))
   
+  # get OR quantiles
+  rr_quants <- bind_rows(lapply(asplit(modelled_est$rr, 2), 
+                                quantile, p = c(0.1,0.2,0.5,0.8,0.9), na.rm = T)) %>% 
+    setNames(paste0("rr_", c("p10", "p20", "p50", "p80", "p90")))
+  
+  # get logOR quantiles
+  logrr_quants <- bind_rows(lapply(asplit(log(modelled_est$rr), 2), 
+                                   quantile, p = c(0.1,0.2,0.5,0.8,0.9), na.rm = T)) %>% 
+    setNames(paste0("rr_", c("logp10", "logp20", "logp50", "logp80", "logp90")))
+  
+  # get wave plot
+  or_wave <- getWavePlotVars(modelled_est$or, prefix = "or_")
+  rr_wave <- getWavePlotVars(modelled_est$rr, prefix = "rr_")
+  
   # V-plot - exceedance probability
   v <- bind_cols(getDPP(modelled_est$or, null_value = 1)) %>% 
     dplyr::select(EP, DPP) %>% 
@@ -79,26 +94,42 @@ for(k in 1:8){
     
   
   # add all colums
-  out[[k]] <- cbind(dplyr::select(global_obj$area_concor, SA2), or_quants, logor_quants, v, mu_quants) %>% 
+  out[[k]] <- cbind(dplyr::select(global_obj$area_concor, SA2), 
+                    or_quants, logor_quants, or_wave,
+                    v, 
+                    mu_quants,
+                    rr_quants, logrr_quants, rr_wave) %>% 
     mutate(riskfactorgrp = rf) %>% 
     left_join(., map_sa2_full, by = "SA2") %>% 
     rename(SA2_code = SA2)
   
   # cleanup
-  rm(modelled_est, mu_quants, or_quants, logor_quants, v)
+  rm(modelled_est, mu_quants, or_quants, logor_quants, v, or_wave, rr_wave,
+     rr_quants, logrr_quants)
   
 ## FINISH FOR LOOP #### --------------------------------------------------------
   
 }
 
-bind_rows(out) %>% 
+# save R version
+full_data <- bind_rows(out) %>% 
   mutate(indicator = "riskfactor",
          level = "",
          sex = "Persons", 
          years = "2017-2018",
          baseline = "national_average") %>% 
-  relocate(indicator, level, sex, riskfactorgrp, years, baseline, SA2_code, SA2_name) %>% 
-  write.csv(., "data/riskfactor_estimates_ViseR.csv")
+  relocate(indicator, level, sex, riskfactorgrp, years, baseline, SA2_code, SA2_name)
+saveRDS(full_data, "data/ViseR_Input_Data/riskfactor_estimates.rds")
+
+# ORs
+full_data %>% 
+  dplyr::select(1:8, contains("or_"), v, bivariate_cat) %>% 
+  write.csv(., "data/ViseR_Input_Data/riskfactor_estimates_or.csv")
+
+# RRs
+full_data %>% 
+  dplyr::select(1:8, contains("rr_"), v, bivariate_cat) %>% 
+  write.csv(., "data/ViseR_Input_Data/riskfactor_estimates_rr.csv")
 
 ## Atlas_estimates_95CIs_riskfactors ## ----------------------------------------
 

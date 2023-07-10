@@ -26,6 +26,7 @@ source('src/wrangle/moreFuns.R')
 
 # Load global data
 global_obj <- readRDS("data/DataLabExport/global_obj.rds")
+listw <- mat2listw(global_obj$W)
 
 # Load raw estimates
 raw_est <- pbapply::pblapply(list.files("data/DataLabExport", 

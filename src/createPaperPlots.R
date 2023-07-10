@@ -227,6 +227,32 @@ jsave(filename = paste0("variance_irsdra.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
+## Non-benchmarked areas #### --------------------------------------------------
+
+summsa2all %>% 
+  left_join(.,state_name_concor, by = "ps_state") %>% 
+  mutate(bench = factor(ifelse((ra_sa2 != "Very Remote" & 
+                                  state_name != "Northern Territory"),
+                        "Benchmarked", "Non\nbenchmarked"),
+                        levels = c("Non\nbenchmarked", "Benchmarked")),
+         model = getRFFullNames(model)) %>% 
+  group_by(model) %>% 
+  mutate(cv_c = cut_number(mu_CV, 10, labels = FALSE)*10) %>%
+  ungroup() %>% 
+  ggplot(aes(y = cv_c, fill = bench))+
+  theme_bw()+
+  geom_bar(position = "fill")+
+  facet_wrap(.~model)+
+  labs(y = "Coefficient of Variation (Percentiles)",
+       x = "",
+       fill = "")
+
+# save object
+jsave(filename = paste0("benchmark_CV.png"), 
+      base_folder = paste0(base_folder, "/figures"),
+      square = F)
+
+
 ## PC1 vs IRSD #### ------------------------------------------------------------
 
 global_obj$census %>% 
