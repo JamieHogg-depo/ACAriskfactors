@@ -63,7 +63,7 @@ for(k in 1:8){
     setNames(paste0("or_", c("p10", "p20", "p50", "p80", "p90")))
   
   # get logOR quantiles
-  logor_quants <- bind_rows(lapply(asplit(log(modelled_est$or), 2), 
+  logor_quants <- bind_rows(lapply(asplit(log2(modelled_est$or), 2), 
                                 quantile, p = c(0.1,0.2,0.5,0.8,0.9), na.rm = T)) %>% 
     setNames(paste0("or_", c("logp10", "logp20", "logp50", "logp80", "logp90")))
   
@@ -73,7 +73,7 @@ for(k in 1:8){
     setNames(paste0("rr_", c("p10", "p20", "p50", "p80", "p90")))
   
   # get logOR quantiles
-  logrr_quants <- bind_rows(lapply(asplit(log(modelled_est$rr), 2), 
+  logrr_quants <- bind_rows(lapply(asplit(log2(modelled_est$rr), 2), 
                                    quantile, p = c(0.1,0.2,0.5,0.8,0.9), na.rm = T)) %>% 
     setNames(paste0("rr_", c("logp10", "logp20", "logp50", "logp80", "logp90")))
   

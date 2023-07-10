@@ -430,19 +430,19 @@ mapping_data <- modelled_est$summ$sa2_map %>%
 
 # define fill colours
 Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
-End <- log(2.1)
+End <- log2(2.1)
 Breaks.fill <- c(1/2, 1/1.5, 1, 1.5, 2)
-Fill.values <- c(-End, log(Breaks.fill), End)
+Fill.values <- c(-End, log2(Breaks.fill), End)
 
 # base map
 base <- mapping_data %>% 
-  ggplot(aes(fill = log(or_median)))+
+  ggplot(aes(fill = log2(or_median)))+
   theme_void()+
   geom_sf(col = NA)+
   scale_fill_gradientn(colors = Fill.colours,
                        values = rescale(Fill.values),
                        labels = as.character(round(Breaks.fill, 3)),
-                       breaks = log(Breaks.fill),
+                       breaks = log2(Breaks.fill),
                        limits = range(Fill.values))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
@@ -595,13 +595,13 @@ Fill.values <-col_out$Fill.values
 
 # base map
 base <- mapping_data %>% 
-  ggplot(aes(fill = log(rr_median)))+
+  ggplot(aes(fill = log2(rr_median)))+
   theme_void()+
   geom_sf(col = NA)+
   scale_fill_gradientn(colors = Fill.colours,
                        values = rescale(Fill.values),
                        labels = as.character(round(Breaks.fill, 2)),
-                       breaks = log(Breaks.fill),
+                       breaks = log2(Breaks.fill),
                        limits = range(Fill.values))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+

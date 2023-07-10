@@ -167,7 +167,7 @@ checkBounds <- function(x){
 
 #' @title getBestRRCutPoint
 #' @description Will always return the upper cut point
-getBestRRCutPoint <- function(x, log_scale = TRUE, cut_prob = 0.01){
+getBestRRCutPoint <- function(x, log2_scale = TRUE, cut_prob = 0.01){
   
   # get 95% range
   rar <- unname(quantile(x, probs = c(cut_prob, 1-cut_prob), na.rm=T))
@@ -187,14 +187,18 @@ getBestRRCutPoint <- function(x, log_scale = TRUE, cut_prob = 0.01){
   message(paste0("Cut point will suppress ", drp, " data points (", round(drp_p,1) ,"%)."))
   
   # create scales
-  if(log_scale){
-	  End = log(round(cut_point, 1))
-	  Breaks.fill = c(seq(1/cut_point,1, length.out = 3)[-3], 1, seq(1,cut_point, length.out = 3)[-1])
-	  Fill.values = c(-End, log(Breaks.fill), End)
+  if(log2_scale){
+	  End = log2(round(cut_point, 1))
+	  Breaks.fill = c(seq(1/cut_point,1, length.out = 3)[-3], 
+	                  1, 
+	                  seq(1,cut_point, length.out = 3)[-1])
+	  Fill.values = c(-End, log2(Breaks.fill), End)
 	  cut_offs <- c(1/cut_point, cut_point)
   }else{
 	  wdth = diff(seq(1,cut_point, length.out = 3)[-1])
-	  Breaks.fill = c(seq(1-2*wdth,1, length.out = 3)[-3], 1, seq(1,cut_point, length.out = 3)[-1])
+	  Breaks.fill = c(seq(1-2*wdth,1, length.out = 3)[-3], 
+	                  1, 
+	                  seq(1,cut_point, length.out = 3)[-1])
 	  Fill.values = c(1-2*wdth-0.01, Breaks.fill, cut_point+0.01)
 	  cut_offs <- c(2-cut_point, cut_point)
   }

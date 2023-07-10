@@ -24,12 +24,12 @@ for(i in 1:ncol(draws)){
   truncation <- c(1/truncation_upper, truncation_upper)
   
   # Initial density estimation
-  f <- density(log(draws[,i]), n = 128)
+  f <- density(log2(draws[,i]), n = 128)
   x.out <- f$x
   y.out <- f$y
   
   # truncate densities
-  keep <- which(x.out > log(truncation[1]) & x.out < log(truncation[2]))
+  keep <- which(x.out > log2(truncation[1]) & x.out < log2(truncation[2]))
   
   # select points
   if(length(keep) > 0){
@@ -68,10 +68,10 @@ for(i in 1:ncol(draws)){
     keep <- which.max(y.out)
     if(keep < n){   # Stack at lower truncation
       keep <- 1:7
-      x.out <- rep(log(truncation[1]), 7)
+      x.out <- rep(log2(truncation[1]), 7)
     }else{          # Stack at upper truncation
       keep <- (n-6):n
-      x.out <- rep(log(truncation[2]), 7)
+      x.out <- rep(log2(truncation[2]), 7)
     }
     y.out <- y.out[keep]
   }
