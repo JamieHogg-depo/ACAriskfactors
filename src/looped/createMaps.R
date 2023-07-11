@@ -579,7 +579,8 @@ message("---- Finished or eps")
 ## RR #### ---------------------------------------------------------------------
 
 # get best range
-col_out <- getBestRRCutPoint(modelled_est$summ$sa2_map$rr_median, cut_prob = 0.05)
+#col_out <- getBestRRCutPoint(modelled_est$summ$sa2_map$rr_median, cut_prob = 0.05)
+col_out <- getBestRRCutPoint(summsa2all$rr_median, cut_prob = 0.03)
 
 # SETUP
 cut_offs <- col_out$cut_offs
