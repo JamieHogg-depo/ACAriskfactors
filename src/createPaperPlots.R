@@ -75,7 +75,7 @@ jsave(filename = paste0("summary_violin.png"),
     geom_abline()+
     geom_point()+
     labs(y = "SHAA (PHA level)",
-         title = "Obesity",
+         title = "Obese",
          x = "",
          col = "SES")+
     ylim(0,1)+xlim(0,1)+
@@ -130,8 +130,8 @@ ob_plt <- ob$summ$pha %>%
   geom_abline()+
   geom_point()+
   labs(y = "SHAA",
-       title = "Obesity",
-       x = "")+
+       title = "Obese",
+       x = "Our estimates")+
   ylim(0,1)+xlim(0,1)+
   theme(legend.position = "none")
 

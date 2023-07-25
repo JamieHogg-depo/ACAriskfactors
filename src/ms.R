@@ -119,8 +119,8 @@ lookup <- data.frame(rf = names(raw_est),
                                  "Inadequate physical activity (all)",
                                  "Risky alcohol consumption",
                                  "Inadequate diet",
-                                 "Obesity",
-                                 "Overweight",
+                                 "Obese",
+                                 "Overweight/obese",
                                  "Current smoking",
                                  "Risky waist circumference"))
 
