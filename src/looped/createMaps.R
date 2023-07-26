@@ -373,7 +373,7 @@ base <- modelled_est$summ$sa2_map %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Width of 95% HDI")+
+    labs(fill = "Width of 95% HPDI")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
@@ -455,7 +455,7 @@ base <- mapping_data %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Odds Ratio")+
+    labs(fill = "Odds ratio")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
@@ -615,7 +615,7 @@ base <- mapping_data %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Rate Ratio")+
+    labs(fill = "Relative ratio")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
@@ -682,7 +682,7 @@ base <- modelled_est$summ$sa2_map %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Width of 95% HDI")+
+    labs(fill = "Width of 95% HPDI")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
@@ -716,8 +716,8 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(6,1,1,1,1,8),
              c(4,10,10,10,10,7))
 full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
-                              layout_matrix  = lay,
-                              top = textGrob(rf_full,gp=gpar(fontsize=10)))
+                              layout_matrix  = lay) #,
+                              #top = textGrob(rf_full,gp=gpar(fontsize=10)))
 
 # save object
 jsave(filename = paste0("rrcisize_", rf ,".png"), 
