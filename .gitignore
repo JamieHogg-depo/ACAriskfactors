@@ -1,7 +1,7 @@
 *.png
 data/
+out/
 *.zip
 .Rproj.user
-*.csv
 *.rds
 .Rhistory
