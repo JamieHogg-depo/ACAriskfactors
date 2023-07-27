@@ -300,4 +300,43 @@ jsave(filename = paste0("boxplot_fna.png"),
       base_folder = paste0(base_folder, "/figures"),
       square = F)
 
+## Correlation plot #### -------------------------------------------------------
+library(corrplot)
+
+# For major cities
+cor_data <- summsa2all %>% 
+  filter(ra_sa2_3c == "Major Cities") %>% 
+  dplyr::select(ps_area, model, mu_median) %>% 
+  pivot_wider(names_from = model, values_from = mu_median) %>% 
+  dplyr::select(-c(ps_area, activityleis, waist_circum, obesity))
+
+res <- cor(cor_data)
+res
+corrplot(res, type = "upper", 
+         tl.col = "black", tl.srt = 45)
+
+# For outer regional
+cor_data <- summsa2all %>% 
+  filter(ra_sa2_3c == "Inner Regional") %>% 
+  dplyr::select(ps_area, model, mu_median) %>% 
+  pivot_wider(names_from = model, values_from = mu_median) %>% 
+  dplyr::select(-c(ps_area, activityleis, waist_circum, obesity))
+
+res <- cor(cor_data)
+res
+corrplot(res, type = "upper", 
+         tl.col = "black", tl.srt = 45)
+
+# For major cities
+cor_data <- summsa2all %>% 
+  filter(ra_sa2_3c == "Outer regional to very remote") %>% 
+  dplyr::select(ps_area, model, mu_median) %>% 
+  pivot_wider(names_from = model, values_from = mu_median) %>% 
+  dplyr::select(-c(ps_area, activityleis, waist_circum, obesity))
+
+res <- cor(cor_data)
+res
+corrplot(res, type = "upper", 
+         tl.col = "black", tl.srt = 45)
+
 ## END SCRIPT #### -------------------------------------------------------------
