@@ -72,6 +72,8 @@ sf_list$draws$mu_spo2 <- (sf_list$draws$mu) %*% W_sparse_sq
 # Cluster analysis
 sf_list$draws$orc <- (sf_list$draws$or - 1)
 sf_list$draws$orc_lag <- (sf_list$draws$or - 1) %*% t(global_obj$W/rowSums(global_obj$W))
+sf_list$draws$rrc <- (sf_list$draws$rr - 1)
+sf_list$draws$rrc_lag <- (sf_list$draws$rr - 1) %*% t(global_obj$W/rowSums(global_obj$W))
 
 ## Posterior summary ## ----
 
@@ -110,7 +112,8 @@ DPP_rr <- bind_cols(getDPP(sf_list$draws$rr, null_value = 1)) %>%
 
 sf_list$summ$sa2 <- list(mu, muspo1, muspo2, DPP_mu, or, logor, DPP_or, rr, logrr, DPP_rr, count) %>% 
   reduce(inner_join, by = "ps_area") %>% 
-  mutate(LISA = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag))) %>% 
+  mutate(LISA_or = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag)),
+         LISA = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag))) %>% 
   left_join(.,global_obj$census, by = "ps_area")
 
 # keep empty geometries
