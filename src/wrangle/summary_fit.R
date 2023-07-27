@@ -5,6 +5,12 @@
 # Source master
 source("src/ms.R")
 
+# add census
+census <- inner_join(global_obj$census, global_obj$area_concor, c("ps_area", "SA2"))
+sa3_concor <- global_obj$area_concor %>% 
+  group_by(SA3, ps_sa3) %>% tally() %>% 
+  ungroup() %>% dplyr::select(-n)
+
 # Load modelled estimates - nonbenchmarked
 modelled_est_nb <- pbapply::pblapply(list.files("data/DataLabExport",
                                              pattern = "modelled_est_nb_*", full.names = T), readRDS)
@@ -55,15 +61,29 @@ if(b == 0){
 }
 
 # PHA level estimates
-this <- aggregate(global_obj$census$N_persons, list(global_obj$census$pha), sum)
-pha_unique <- this[,1]
-this <- this[,2]
-foo <- function(x){
-  aggregate(x*global_obj$census$N_persons, list(global_obj$census$pha), sum)[,2]/this
-}
-pha_draws_mat <- t(pbapply::pbapply(sf_list$draws$mu, 1, foo))
-sf_list$summ$pha <- getMCMCsummary(pha_draws_mat) %>% mutate(pha =pha_unique) %>% relocate(pha)
-rm(this, pha_unique, foo, pha_draws_mat)
+    this <- aggregate(global_obj$census$N_persons, list(global_obj$census$pha), sum)
+    pha_unique <- this[,1]
+    this <- this[,2]
+    foo <- function(x){
+      aggregate(x*global_obj$census$N_persons, list(global_obj$census$pha), sum)[,2]/this
+    }
+    pha_draws_mat <- t(pbapply::pbapply(sf_list$draws$mu, 1, foo))
+    sf_list$summ$pha <- getMCMCsummary(pha_draws_mat) %>% mutate(pha =pha_unique) %>% relocate(pha)
+    rm(this, pha_unique, foo, pha_draws_mat)
+    
+# SA3 level estimates
+    this <- aggregate(census$N_persons, list(census$ps_sa3), sum)
+    sa3_unique <- this[,1]
+    this <- this[,2]
+    foo <- function(x){
+      aggregate(x*census$N_persons, list(census$ps_sa3), sum)[,2]/this
+    }
+    sa3_draws_mat <- t(pbapply::pbapply(sf_list$draws$mu, 1, foo))
+    sf_list$summ$sa3 <- getMCMCsummary(sa3_draws_mat) %>% 
+      mutate(ps_sa3 = sa3_unique) %>% 
+      left_join(.,sa3_concor, by = "ps_sa3") %>% 
+      relocate(ps_sa3, SA3)
+    rm(this, sa3_unique, foo, sa3_draws_mat)
 
 # spatially lagged values
 sf_list$draws$mu_spo1 <- (sf_list$draws$mu) %*% W_sparse
