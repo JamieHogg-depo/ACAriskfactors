@@ -11,6 +11,7 @@ ocu <- suppressMessages(list(read_csv("~/OneDrive - Queensland University of Tec
   rename_with(~gsub("P_Tot_", "", .x)) %>% 
   mutate_at(vars(-SA2), ~ checkBounds(.))
 
+# Load indigenous status
 indig <- read_csv("~/OneDrive - Queensland University of Technology/DataLab/Requested file load/2016/2016_SA2_Census_GeneralCommunityProfile/2016 Census GCP Statistical Area 2 for AUST/2016Census_G07_AUS_SA2.csv") %>% 
   dplyr::select(SA2_MAINCODE_2016,
                 starts_with("Tot_")) %>% 
@@ -23,5 +24,6 @@ indig <- read_csv("~/OneDrive - Queensland University of Technology/DataLab/Requ
   rename_with(~gsub("_P", "", .x)) %>% 
   mutate_at(vars(-SA2), ~ checkBounds(.))
 
+# Load averages
 averages <- read_csv("~/OneDrive - Queensland University of Technology/DataLab/Requested file load/2016/2016_SA2_Census_GeneralCommunityProfile/2016 Census GCP Statistical Area 2 for AUST/2016Census_G02_AUS_SA2.csv") %>% 
   rename(SA2 = SA2_MAINCODE_2016)
