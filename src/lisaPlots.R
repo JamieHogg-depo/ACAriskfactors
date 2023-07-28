@@ -7,8 +7,8 @@ source("src/ms.R")
 ## Wrangle ## ------------------------------------------------------------------
 
 ec_df <- summsa2all %>% 
-  mutate(ec = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
+  mutate(ec = ifelse(rr_EP > 0.9, "H", 
+                       ifelse(rr_EP < 0.1, "L", NA)),
          out = factor(ifelse(is.na(LISA) & !is.na(ec), 
                              ec, as.character(LISA)),
                       levels = c("HH", "H", "L", "LL")),
@@ -247,7 +247,7 @@ ec_irsd %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # irsd - fill
@@ -265,7 +265,7 @@ ec_irsd %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barfill_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # ra - nofill
@@ -283,7 +283,7 @@ ec_ra %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # ra - fill
@@ -301,7 +301,7 @@ ec_ra %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barfill_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 ## FACTOR: Factor ## -----------------------------------------------------------
@@ -320,7 +320,7 @@ ec_irsd %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_npw_cf.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # irsd - fill
@@ -337,7 +337,7 @@ ec_irsd %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barfill_npw_cf.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # ra - nofill
@@ -356,7 +356,7 @@ ec_ra %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_npw_cf.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # ra - fill
@@ -375,7 +375,7 @@ ec_ra %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barfill_npw_cf.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 ## DEPREC ## -------------------------------------------------------------------
@@ -400,7 +400,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_npw_cf.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # color: EC
@@ -419,7 +419,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_npw_cec.png.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # filled
@@ -437,7 +437,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_ra_barfill_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 ## Barchart - RA - Population weighted ## --------------------------------------
@@ -477,7 +477,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_npw_cf.png.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # Socioeconomic on yaxis instead
@@ -496,7 +496,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 # Socioeconomic - fill
@@ -514,7 +514,7 @@ ec_df %>%
 
 # save object
 jsave(filename = paste0("ec_irsd_barfill_npw_cec.png"), 
-      base_folder = paste0(base_folder, "/figures/ec"),
+      base_folder = paste0(base_folder, "/figures/ec/npw"),
       square = F, ratio = 9:6)
 
 ## END SCRIPT #### -------------------------------------------------------------

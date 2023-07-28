@@ -49,8 +49,8 @@ rm(temp_df, column_of_direct)
 ## MAIN: Table 3: Evidence classification ## -----------------------------------
 
 summsa2all %>% 
-  mutate(ec = ifelse(or_EP > 0.9, "H", 
-                     ifelse(or_EP < 0.1, "L", NA)),
+  mutate(ec = ifelse(rr_EP > 0.9, "H", 
+                     ifelse(rr_EP < 0.1, "L", NA)),
          out = factor(ifelse(is.na(LISA) & !is.na(ec), 
                              ec, as.character(LISA)),
                       levels = c("HH", "H", "L", "LL")),
