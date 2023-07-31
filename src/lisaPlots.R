@@ -7,10 +7,10 @@ source("src/ms.R")
 ## Wrangle ## ------------------------------------------------------------------
 
 ec_df <- summsa2all %>% 
-  mutate(ec = ifelse(rr_EP > 0.9, "H", 
-                       ifelse(rr_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(ec), 
-                             ec, as.character(LISA)),
+  mutate(ec = ifelse(mu_EP > 0.9, "H", 
+                       ifelse(mu_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA_mu) & !is.na(ec), 
+                             ec, as.character(LISA_mu)),
                       levels = c("HH", "H", "L", "LL")),
          model = getRFFullNames(model),
          ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", 

@@ -501,6 +501,76 @@ jsave(filename = paste0("or_", rf ,".png"),
 rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
 message("---- Finished ors")
 
+## OR - CI SIZE #### ---------------------------------------------------
+  
+# base map
+up_lim <- unname(quantile(modelled_est$summ$sa2$or_cisize, probs = 0.98))
+base <- modelled_est$summ$sa2_map %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = or_cisize), col = NA)+
+  scale_fill_viridis_c(begin = 0, end = 1, 
+                       direction = -1,
+                       limit = c(0, up_lim),
+                       oob = squish,
+                       option = "D")+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Width of 95% HPDI")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay) #,
+#top = textGrob(rf_full,gp=gpar(fontsize=10)))
+
+# save object
+jsave(filename = paste0("orcisize_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished or cisize")
+
 ## ODDS RATIOS - EP #### -------------------------------------------------------
 
 # SETUP

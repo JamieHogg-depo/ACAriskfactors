@@ -49,10 +49,10 @@ rm(temp_df, column_of_direct)
 ## MAIN: Table 3: Evidence classification ## -----------------------------------
 
 summsa2all %>% 
-  mutate(ec = ifelse(rr_EP > 0.9, "H", 
-                     ifelse(rr_EP < 0.1, "L", NA)),
-         out = factor(ifelse(is.na(LISA) & !is.na(ec), 
-                             ec, as.character(LISA)),
+  mutate(ec = ifelse(mu_EP > 0.9, "H", 
+                     ifelse(mu_EP < 0.1, "L", NA)),
+         out = factor(ifelse(is.na(LISA_mu) & !is.na(ec), 
+                             ec, as.character(LISA_mu)),
                       levels = c("HH", "H", "L", "LL")),
          model = getRFFullNames(model)) %>% 
   mutate(ww =  2221*8 * N_persons/sum(N_persons)) %>% 

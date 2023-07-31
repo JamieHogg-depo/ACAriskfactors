@@ -94,6 +94,8 @@ sf_list$draws$orc <- (sf_list$draws$or - 1)
 sf_list$draws$orc_lag <- (sf_list$draws$or - 1) %*% t(global_obj$W/rowSums(global_obj$W))
 sf_list$draws$rrc <- (sf_list$draws$rr - 1)
 sf_list$draws$rrc_lag <- (sf_list$draws$rr - 1) %*% t(global_obj$W/rowSums(global_obj$W))
+sf_list$draws$muc <- (sf_list$draws$mu - raw_est[[i]]$national[1])
+sf_list$draws$muc_lag <- (sf_list$draws$mu - raw_est[[i]]$national[1]) %*% t(global_obj$W/rowSums(global_obj$W))
 
 ## Posterior summary ## ----
 
@@ -133,7 +135,8 @@ DPP_rr <- bind_cols(getDPP(sf_list$draws$rr, null_value = 1)) %>%
 sf_list$summ$sa2 <- list(mu, muspo1, muspo2, DPP_mu, or, logor, DPP_or, rr, logrr, DPP_rr, count) %>% 
   reduce(inner_join, by = "ps_area") %>% 
   mutate(LISA_or = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag)),
-         LISA = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag))) %>% 
+         LISA_mu = as.factor(getLISA(sf_list$draws$muc, sf_list$draws$muc_lag)),
+         LISA_rr = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag))) %>% 
   left_join(.,global_obj$census, by = "ps_area")
 
 # keep empty geometries
@@ -154,6 +157,23 @@ message(i, ": bench ", b, ": finished ", rf)
 
 }
 }
+
+## Create summsa2all object ## -------------------------------------------------
+ll <- list()
+
+for(k in 1:8){
+  
+  rf <- names(raw_est)[k]
+  message("Started ", k, ": ", rf)
+  
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  ll[[k]] <- modelled_est$summ$sa2
+}
+
+# finalise and save
+sa2_all <- bind_rows(ll) %>% left_join(.,irsd_5c, by = "ps_area")
+saveRDS(sa2_all, "data/summary_files/summsa2all.Rds")
+
     
 ## END SCRIPT ## ---------------------------------------------------------------
     
