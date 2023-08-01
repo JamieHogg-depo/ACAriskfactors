@@ -24,7 +24,8 @@ foo(obesity_b1_full, 343, "obesity")
 getIT <- function(aust.prev){
   aust.odds <- aust.prev/(1-aust.prev)
   adj_amt <- 0.5-aust.prev
-  draws.prev <- rnorm(6000, aust.prev + 0.06, 0.04)
+  signn <- sample(c(-1,1), 6000, replace = T)
+  draws.prev <- rnorm(6000, aust.prev + signn*0.1, 0.04)
   draws.prev <- ifelse(draws.prev > 1, 0.99, draws.prev)
   draws.prev <- ifelse(draws.prev < 0, 0.01, draws.prev)
   #draws.rr <- (draws.prev + adj_amt)/(aust.prev + adj_amt)
@@ -34,6 +35,7 @@ getIT <- function(aust.prev){
   
   data.frame(
     OR_p = median(draws.or),
+    lOR_p = median(log2(draws.or)),
     OR_sd = sd(draws.or),
     RR_p = median(draws.rr),
     lRR_p = median(log2(draws.rr)),
@@ -42,13 +44,23 @@ getIT <- function(aust.prev){
 }
 
 # for loop
-grid <- data.frame(aust.prev = rep(seq(0.1, 0.9, 0.01), 100))
+grid <- data.frame(aust.prev = rep(seq(0.05, 0.95, 0.01), 100))
 out <- list()
+pb <- txtProgressBar(min = 0, max = nrow(grid), style = 3)
 for(i in 1:nrow(grid)){
   out[[i]] <- getIT(grid$aust.prev[i])
+  setTxtProgressBar(pb, i)
 }
+close(pb)
 data <- bind_cols(grid, bind_rows(out))
+data %>% 
+  ggplot(aes(RR_p, OR_p))+
+  geom_point()+
+  geom_abline()+
+  facet_grid(.~cut_width(aust.prev, 0.1))
+with(data, plot(RR_p, OR_p)); abline(a=0,b=1)
 
 with(data, plot(aust.prev, OR_p))
+with(data, plot(aust.prev, lOR_p))
 with(data, plot(aust.prev, RR_p))
 with(data, plot(aust.prev, lRR_p))
