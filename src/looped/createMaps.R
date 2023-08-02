@@ -685,7 +685,7 @@ base <- mapping_data %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Relative risk")+
+    labs(fill = "Relative ratio")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
@@ -730,6 +730,88 @@ jsave(filename = paste0("rr_", rf ,".png"),
 # cleanup
 rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
 message("---- Finished rrs")
+
+## RR - same scale as OR #### --------------------------------------------------
+
+# SETUP - use 2 instead!
+cut_offs <- c(1/2, 2)
+mapping_data <- modelled_est$summ$sa2_map %>% 
+  mutate() %>%
+  mutate(rr_median = ifelse(rr_median > cut_offs[2], cut_offs[2], rr_median),
+         rr_median = ifelse(rr_median < cut_offs[1], cut_offs[1], rr_median))
+
+# define fill colours
+Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
+End <- log2(2.1)
+Breaks.fill <- c(1/2, 1/1.5, 1, 1.5, 2)
+Fill.values <- c(-End, log2(Breaks.fill), End)
+
+# base map
+base <- mapping_data %>% 
+  ggplot(aes(fill = log2(rr_median)))+
+  theme_void()+
+  geom_sf(col = NA)+
+  scale_fill_gradientn(colors = Fill.colours,
+                       values = rescale(Fill.values),
+                       labels = as.character(round(Breaks.fill, 3)),
+                       breaks = log2(Breaks.fill),
+                       limits = range(Fill.values))+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Relative ratio")+
+    guides(fill = guide_colourbar(barwidth = 15, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 6),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob(rf_full,gp=gpar(fontsize=10)))
+
+# save plot
+jsave(filename = paste0("rr_ss_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps"),
+      plot = full_inset_plt, square = F)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
+message("---- Finished rrs_ss")
 
 ## RR - CI SIZE #### ---------------------------------------------------
 
@@ -797,88 +879,6 @@ jsave(filename = paste0("rrcisize_", rf ,".png"),
 # cleanup
 rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
 message("---- Finished rr cisize")
-
-## RR - same scale as OR #### --------------------------------------------------
-
-# SETUP - use 2 instead!
-cut_offs <- c(1/2, 2)
-mapping_data <- modelled_est$summ$sa2_map %>% 
-  mutate() %>%
-  mutate(rr_median = ifelse(rr_median > cut_offs[2], cut_offs[2], rr_median),
-         rr_median = ifelse(rr_median < cut_offs[1], cut_offs[1], rr_median))
-
-# define fill colours
-Fill.colours <- c("#2C7BB6", "#2C7BB6", "#ABD9E9", "#FFFFBF", "#FDAE61", "#D7191C", "#D7191C")
-End <- log2(2.1)
-Breaks.fill <- c(1/2, 1/1.5, 1, 1.5, 2)
-Fill.values <- c(-End, log2(Breaks.fill), End)
-
-# base map
-base <- mapping_data %>% 
-  ggplot(aes(fill = log2(rr_median)))+
-  theme_void()+
-  geom_sf(col = NA)+
-  scale_fill_gradientn(colors = Fill.colours,
-                       values = rescale(Fill.values),
-                       labels = as.character(round(Breaks.fill, 3)),
-                       breaks = log2(Breaks.fill),
-                       limits = range(Fill.values))+
-  geom_sf(data = aus_border, aes(geometry = geometry), 
-          colour = "black", fill = NA, size = 0.2)+
-  geom_sf(data = state_border, aes(geometry = geometry), 
-          colour = "black", fill = NA, size = 0.1)+
-  theme(legend.position = "none",
-        text = element_text(size = 8),
-        plot.title = element_text(margin = margin(0,0,2,0)),
-        plot.margin = unit(c(1,1,1,1), "mm"))
-
-# Base map with legend
-(base_legend <- base +
-    labs(fill = "Relative risk")+
-    guides(fill = guide_colourbar(barwidth = 15, 
-                                  title.position = "top",
-                                  title.hjust = 0.5))+
-    theme(legend.position = "bottom"))
-llegend <- ggpubr::get_legend(base_legend)
-
-# Base map with boxes
-base_boxes <- base
-for(i in 1:8){
-  base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
-}
-
-# Create list of insets
-inset_list <- list()
-for(i in 1:8){
-  inset_list[[i]] <- base +
-    xlim(lims$xmin[i], lims$xmax[i]) +
-    ylim(lims$ymin[i], lims$ymax[i]) +
-    labs(title = lims$inset_labs[i])+
-    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
-          plot.title = element_text(margin = margin(0,0,2,0),
-                                    size = 6),
-          plot.margin = unit(c(1,1,1,1), "mm"))
-}
-inset_list <- Filter(Negate(is.null), inset_list)
-
-# create final list
-lay <- rbind(c(9,1,1,1,1,2),
-             c(5,1,1,1,1,3),
-             c(6,1,1,1,1,8),
-             c(4,10,10,10,10,7))
-full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
-                              layout_matrix  = lay,
-                              top = textGrob(rf_full,gp=gpar(fontsize=10)))
-
-# save plot
-jsave(filename = paste0("rr_ss_", rf ,".png"), 
-      base_folder = paste0(base_folder, "/maps"),
-      plot = full_inset_plt, square = F)
-
-# cleanup
-rm(base, base_boxes, llegend, base_legend, mapping_data, lay, full_inset_plt)
-message("---- Finished rrs_ss")
 
 ## Counts #### -----------------------------------------------------------------
 
