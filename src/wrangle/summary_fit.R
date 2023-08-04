@@ -159,6 +159,7 @@ message(i, ": bench ", b, ": finished ", rf)
 }
 
 ## Create summsa2all object ## -------------------------------------------------
+
 ll <- list()
 
 for(k in 1:8){
@@ -174,6 +175,22 @@ for(k in 1:8){
 sa2_all <- bind_rows(ll) %>% left_join(.,irsd_5c, by = "ps_area")
 saveRDS(sa2_all, "data/summary_files/summsa2all.Rds")
 
+## Create summphaall object ## -------------------------------------------------
+
+ll <- list()
+
+for(k in 1:8){
+  
+  rf <- names(raw_est)[k]
+  message("Started ", k, ": ", rf)
+  
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  ll[[k]] <- modelled_est$summ$pha %>% mutate(model = rf) %>% relocate(model)
+}
+
+# finalise and save
+pha_all <- bind_rows(ll)
+saveRDS(pha_all, "data/summary_files/summphaall.Rds")
     
 ## END SCRIPT ## ---------------------------------------------------------------
     

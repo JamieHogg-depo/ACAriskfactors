@@ -13,6 +13,7 @@ library(readxl)
 library(grid)
 library(gridExtra)
 library(Matrix)
+library(spdep)
 rm(list = ls())
 
 base_folder <- "C:/r_proj/ACAriskfactors/out"
@@ -37,6 +38,7 @@ names(raw_est) <- str_remove(
 
 # Load all modelled estimates
 summsa2all <- readRDS("data/summary_files/summsa2all.rds")
+summphaall <- readRDS("data/summary_files/summphaall.rds")
 
 # Model building
 model_building <- lapply(list.files("data/DataLabExport", 
