@@ -7,11 +7,15 @@ source("src/ms.R")
 ## Wrangle ## ------------------------------------------------------------------
 
 ec_df <- summsa2all %>% 
-  mutate(ec = ifelse(mu_EP > 0.9, "H", 
+  mutate(LISA_mu = case_when(
+    LISA_mu == "HH" ~ "HC",
+    LISA_mu == "LL" ~ "LC"
+  ),
+         ec = ifelse(mu_EP > 0.9, "H", 
                        ifelse(mu_EP < 0.1, "L", NA)),
          out = factor(ifelse(is.na(LISA_mu) & !is.na(ec), 
                              ec, as.character(LISA_mu)),
-                      levels = c("HH", "H", "L", "LL")),
+                      levels = c("HC", "H", "L", "LC")),
          model = getRFFullNames(model),
          ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", 
                             "Outer regional\nto very remote", 
@@ -26,25 +30,25 @@ ec_df <- summsa2all %>%
 ec1 <- ec_df %>% 
   mutate(ww =  2221*8 * N_persons/sum(N_persons)) %>% 
   group_by(model, irsd_5c) %>% 
-  summarise(HH = sum(ww*(out == "HH"), na.rm= T),
+  summarise(HC = sum(ww*(out == "HC"), na.rm= T),
             H = sum(ww*(out == "H"), na.rm= T),
             L = sum(ww*(out == "L"), na.rm= T),
-            LL = sum(ww*(out == "LL"), na.rm= T),
+            LC = sum(ww*(out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, irsd_5c)) %>% 
-  mutate(out = factor(name, levels = c("HH", "H", "L", "LL")))
+  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")))
 
 # non-weighted
 ec2 <- ec_df %>% 
   mutate(ww =  2221*8 * N_persons/sum(N_persons)) %>% 
   group_by(model, irsd_5c) %>% 
-  summarise(HH = sum((out == "HH"), na.rm= T),
+  summarise(HC = sum((out == "HC"), na.rm= T),
             H = sum((out == "H"), na.rm= T),
             L = sum((out == "L"), na.rm= T),
-            LL = sum((out == "LL"), na.rm= T),
+            LC = sum((out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, irsd_5c)) %>% 
-  mutate(out = factor(name, levels = c("HH", "H", "L", "LL")),
+  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")),
          uw_value = value) %>% 
   dplyr::select(uw_value)
 
@@ -57,25 +61,25 @@ ec_irsd <- cbind(ec1, ec2); rm(ec1,ec2)
 ec1 <- ec_df %>% 
   mutate(ww =  2221*8 * N_persons/sum(N_persons)) %>% 
   group_by(model, ra) %>% 
-  summarise(HH = sum(ww*(out == "HH"), na.rm= T),
+  summarise(HC = sum(ww*(out == "HC"), na.rm= T),
             H = sum(ww*(out == "H"), na.rm= T),
             L = sum(ww*(out == "L"), na.rm= T),
-            LL = sum(ww*(out == "LL"), na.rm= T),
+            LC = sum(ww*(out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, ra)) %>% 
-  mutate(out = factor(name, levels = c("HH", "H", "L", "LL")))
+  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")))
 
 # non-weighted
 ec2 <- ec_df %>% 
   mutate(ww =  2221*8 * N_persons/sum(N_persons)) %>% 
   group_by(model, ra) %>% 
-  summarise(HH = sum((out == "HH"), na.rm= T),
+  summarise(HC = sum((out == "HC"), na.rm= T),
             H = sum((out == "H"), na.rm= T),
             L = sum((out == "L"), na.rm= T),
-            LL = sum((out == "LL"), na.rm= T),
+            LC = sum((out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, ra)) %>% 
-  mutate(out = factor(name, levels = c("HH", "H", "L", "LL")),
+  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")),
          uw_value = value) %>% 
   dplyr::select(uw_value)
 
@@ -94,7 +98,7 @@ ec_irsd %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -112,7 +116,7 @@ ec_irsd %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -130,7 +134,7 @@ ec_ra %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -148,7 +152,7 @@ ec_ra %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -242,7 +246,7 @@ ec_irsd %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -260,7 +264,7 @@ ec_irsd %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -278,7 +282,7 @@ ec_ra %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -296,7 +300,7 @@ ec_ra %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))
 
 # save object
@@ -414,7 +418,7 @@ ec_df %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL")) +
+                    breaks = c("HC", "H", "L", "LC")) +
   scale_x_continuous(breaks=c(0,150,300))
 
 # save object
@@ -433,7 +437,7 @@ ec_df %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))
+                    breaks = c("HC", "H", "L", "LC"))
 
 # save object
 jsave(filename = paste0("ec_ra_barfill_npw_cec.png"), 
@@ -451,7 +455,7 @@ ec_ra %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))+
+                    breaks = c("HC", "H", "L", "LC"))+
   scale_x_continuous(breaks=c(0,250,500))
 
 # save object
@@ -491,7 +495,7 @@ ec_df %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL")) +
+                    breaks = c("HC", "H", "L", "LC")) +
   scale_x_continuous(breaks=c(0,150,300))
 
 # save object
@@ -510,7 +514,7 @@ ec_df %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HH", "H", "L", "LL"))
+                    breaks = c("HC", "H", "L", "LC"))
 
 # save object
 jsave(filename = paste0("ec_irsd_barfill_npw_cec.png"), 
