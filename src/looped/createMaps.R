@@ -968,13 +968,14 @@ message("---- Finished rr cisize")
 ## Counts #### -----------------------------------------------------------------
 
 # squish the top and lower 1 quantiles
-rar<- unname(quantile(modelled_est$summ$sa2$count_median/1000, p = c(0.01,0.99)))
+rar<- unname(quantile(summsa2all$count_median, p = c(0.01,0.99)))
+#rar<- unname(quantile(modelled_est$summ$sa2$count_median, p = c(0.01,0.99)))
 
 # base map
 base <- modelled_est$summ$sa2_map %>% 
   ggplot()+
   theme_void()+
-  geom_sf(aes(fill = count_median/1000), col = NA)+
+  geom_sf(aes(fill = count_median), col = NA)+
   scale_fill_viridis_c(begin = 0.3, end = 1, 
                        direction = -1,
                        option = "B", 
@@ -990,7 +991,7 @@ base <- modelled_est$summ$sa2_map %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Count (x1000)")+
+    labs(fill = "Count")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
