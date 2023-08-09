@@ -991,7 +991,7 @@ base <- modelled_est$summ$sa2_map %>%
 
 # Base map with legend
 (base_legend <- base +
-    labs(fill = "Count")+
+    labs(fill = "Modelled population count")+
     guides(fill = guide_colourbar(barwidth = 15, 
                                   title.position = "top",
                                   title.hjust = 0.5))+
