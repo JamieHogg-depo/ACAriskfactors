@@ -5,3 +5,5 @@ out/
 .Rproj.user
 *.rds
 .Rhistory
+*.pdf
+*.url
