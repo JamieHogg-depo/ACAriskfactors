@@ -5,16 +5,19 @@ source('src/wrangle/getWavePlotVars.R')
 # simple function to streamline the saving of plots
 jsave <- function(filename, base_folder, 
                   plot = last_plot(), 
-                  square = T, square_size = 5000, 
-                  ratio = c(6,9)){
+                  square = T, 
+                  square_size = 5000,
+                  scale = 1,
+                  ratio = c(6,9),
+                  dpi = 1000){
   if(square){
     ggsave(filename = filename,
            plot = plot,
            path = base_folder,
-           dpi = 1000,
+           dpi = dpi,
            width = square_size,
            height = square_size,
-           scale = 1,
+           scale = scale,
            units = "px")
   }else{
     total = square_size^2
@@ -23,10 +26,10 @@ jsave <- function(filename, base_folder,
     ggsave(filename = filename,
            plot = plot, 
            path = base_folder,
-           dpi = 1000,
+           dpi = dpi,
            width = round(b),
            height = round(a),
-           scale = 1,
+           scale = scale,
            units = "px")
   }
 }
@@ -115,8 +118,8 @@ getRFFullNames <- function(x){
   temp <- case_when(
     x == "waist_circum" ~ "Risky waist\ncircumference",
     x == "smoking" ~ "Current smoking",
-    x == "overweight" ~ "Overweight",
-    x == "obesity" ~ "Obesity",
+    x == "overweight" ~ "Overweight/\nobese",
+    x == "obesity" ~ "Obese",
     x == "diet" ~ "Inadequate\ndiet",
     x == "alcohol" ~ "Risky\nalcohol\nconsumption",
     x == "activityleis" ~ "Inadequate\nactivity\n(leisure)",
@@ -126,8 +129,8 @@ getRFFullNames <- function(x){
                 levels = c("Current smoking",
                 "Risky\nalcohol\nconsumption",
                 "Inadequate\ndiet",
-                "Obesity",
-                "Overweight",
+                "Obese",
+                "Overweight/\nobese",
                 "Risky waist\ncircumference",
                 "Inadequate\nactivity\n(leisure)",
                 "Inadequate\nactivity\n(all)")))
@@ -280,3 +283,37 @@ coord_obs_pred <-
       clip = clip
     )
   }
+
+#' Convert EPS to PNG.
+#'
+#' Convert EPS file to PNG format.
+#'
+#' @param epsfile EPS file to convert.
+#' @param dpi dots per inch.
+#' @param gray whether image should be grayscale.
+#' @param ag antialias value for graphics, from 0 (sharp) and 4 (smooth).
+#' @param at antialias value for text, from 0 (sharp) and 4 (smooth).
+#'
+#' @return \code{NULL}, but alters EPS file and creates PDF file.
+#'
+#' @note Requires shell scripts \code{2png} and \code{optipng}.
+#'
+#' @export
+
+eps2png <- function(epsfile, dpi=300, gray=FALSE, ag=4, at=4)
+{
+  if(!file.exists(epsfile))
+    stop(epsfile, " not found. Please verify filename.")
+  
+  png.args <- if(.Platform$OS.type=="windows")
+    paste0("-ag=", ag, " -at=", at, " -dpi=", dpi,
+           if(gray) " -gray")
+  else
+    paste("-a", ag, "-b", at, "-d", dpi, if(gray) "-g")
+  png.cmd <- paste("2png", png.args, epsfile)
+  pngfile <- paste0(tools::file_path_sans_ext(epsfile), ".png")
+  opt.cmd <- paste("optipng -strip all", pngfile)
+  
+  system(png.cmd)
+  system(opt.cmd)
+}
