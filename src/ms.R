@@ -23,10 +23,15 @@ base_folder <- "C:/r_proj/ACAriskfactors/out"
 source('src/wrangle/functions_ALL.R')
 source('src/wrangle/moreFuns.R')
 
+## Load adult population ## ----------------------------------------------------
+
+source("src/wrangle/getAdultPopulation.R")
+
 ## Load Data ## ----------------------------------------------------------------
 
 # Load global data
 global_obj <- readRDS("data/DataLabExport/global_obj.rds")
+global_obj$census <- left_join(global_obj$census, sa2popadult)
 listw <- spdep::mat2listw(global_obj$W)
 
 # Load raw estimates
