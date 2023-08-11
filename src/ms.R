@@ -26,12 +26,14 @@ source('src/wrangle/moreFuns.R')
 ## Load adult population ## ----------------------------------------------------
 
 source("src/wrangle/getAdultPopulation.R")
+SA2_ERP <- read_csv("data/DataLabExport/SA2_ERP.csv", col_types = cols(X1 = col_skip())) %>% 
+  dplyr::select(SA2, N_persons_adults)
 
 ## Load Data ## ----------------------------------------------------------------
 
 # Load global data
 global_obj <- readRDS("data/DataLabExport/global_obj.rds")
-global_obj$census <- left_join(global_obj$census, sa2popadult)
+global_obj$census <- left_join(global_obj$census, SA2_ERP)
 listw <- spdep::mat2listw(global_obj$W)
 
 # Load raw estimates
