@@ -137,9 +137,9 @@ DPP_rr <- bind_cols(getDPP(sf_list$draws$rr, null_value = 1)) %>%
 
 sf_list$summ$sa2 <- list(mu, muspo1, muspo2, DPP_mu, or, logor, DPP_or, rr, logrr, DPP_rr, count) %>% 
   reduce(inner_join, by = "ps_area") %>% 
-  mutate(LISA_or = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag)),
-         LISA_mu = as.factor(getLISA(sf_list$draws$muc, sf_list$draws$muc_lag)),
-         LISA_rr = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag))) %>% 
+  mutate(LISA_or = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag, cutoff = 0.8)),
+         LISA_mu = as.factor(getLISA(sf_list$draws$muc, sf_list$draws$muc_lag, cutoff = 0.8)),
+         LISA_rr = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag, cutoff = 0.8))) %>% 
   left_join(.,global_obj$census, by = "ps_area")
 
 # keep empty geometries
@@ -253,9 +253,9 @@ message(i, ": bench ", b, ": finished ", rf)
   
   sf_list$summ$sa2 <- list(mu, muspo1, muspo2, DPP_mu, or, logor, DPP_or, rr, logrr, DPP_rr, count) %>% 
     reduce(inner_join, by = "ps_area") %>% 
-    mutate(LISA_or = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag)),
-           LISA_mu = as.factor(getLISA(sf_list$draws$muc, sf_list$draws$muc_lag)),
-           LISA_rr = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag))) %>% 
+    mutate(LISA_or = as.factor(getLISA(sf_list$draws$orc, sf_list$draws$orc_lag, cutoff = 0.8)),
+           LISA_mu = as.factor(getLISA(sf_list$draws$muc, sf_list$draws$muc_lag, cutoff = 0.8)),
+           LISA_rr = as.factor(getLISA(sf_list$draws$rrc, sf_list$draws$rrc_lag, cutoff = 0.8))) %>% 
     left_join(.,global_obj$census, by = "ps_area")
   
   # keep empty geometries

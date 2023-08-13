@@ -1076,8 +1076,8 @@ base <- modelled_est$summ$sa2_map %>%
     LISA_mu == "HH" ~ "HC",
     LISA_mu == "LL" ~ "LC"
   ),
-         lisa = ifelse(or_EP > 0.9, "H", 
-                       ifelse(or_EP < 0.1, "L", NA)),
+         lisa = ifelse(or_EP > 0.8, "H", 
+                       ifelse(or_EP < 0.2, "L", NA)),
          LISA_c = factor(ifelse(is.na(LISA_mu) & !is.na(lisa), lisa, as.character(LISA_mu)),
                          levels = c("HC", "H", "L", "LC"))) %>% 
   ggplot()+

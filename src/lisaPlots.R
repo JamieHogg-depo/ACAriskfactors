@@ -11,8 +11,8 @@ ec_df <- summsa2all %>%
     LISA_mu == "HH" ~ "HC",
     LISA_mu == "LL" ~ "LC"
   ),
-         ec = ifelse(mu_EP > 0.9, "H", 
-                       ifelse(mu_EP < 0.1, "L", NA)),
+         ec = ifelse(mu_EP > 0.8, "H", 
+                       ifelse(mu_EP < 0.2, "L", NA)),
          out = factor(ifelse(is.na(LISA_mu) & !is.na(ec), 
                              ec, as.character(LISA_mu)),
                       levels = c("HC", "H", "L", "LC")),
