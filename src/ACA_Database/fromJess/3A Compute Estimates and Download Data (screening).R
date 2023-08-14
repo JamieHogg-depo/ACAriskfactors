@@ -32,32 +32,29 @@
 #          
 #==========================================================================
 
-# Run setup file
-source("src/ms.R")
+# Load packages
+library(dplyr)
+# library(openxlsx) # Currently need to save as xlsx to retain leading "0"s in codes
 
-# get map
-sa2_name <- st_drop_geometry(map_sa2) %>% 
-  mutate(SA2 = as.numeric(SA2_MAIN16)) %>% 
-  dplyr::select(SA2, ps_area, SA2_NAME)
 
 # Thanks to Jamie for packaging up the code for obtaining the wave plot data
-source("src/ACA_Database/getWavePlotVars2.R")
+source("G:/Screening/BreastScreen/Programs/2016 ASGS/getWavePlotVars2.R")
 
 # Set filepaths
-fp.root <- "src/ACA_Database/"
+fp.root <- "G:/Screening/BreastScreen/"
 fp.wd <- paste0(fp.root, "/Results/2016 ASGS/Export Data")
 if (!dir.exists(fp.wd)) dir.create(fp.wd)
 setwd(fp.wd)
 
 # Edit this function so that you can load the MCMC
-fp.data <- function(x){
-  temp <- readRDS(paste0("C:/r_proj/ACAriskfactors/data/DataLabExport/modelled_est_", x, ".rds"))
-  return(temp$mu)
-}
+fp.data <- function(x) paste0(fp.root, "/Results/2016 ASGS/MCMC Output/MCMC BreastScreen_BYM_201920_", x, ".Rdata")
+# Only required if calculating estimates for non-participants
+fp.pop <- "G:/Screening/BreastScreen/Data/2-year/Eligible_population_BreastScreen_1920.Rdata"
 
 # Length of study period
 # This is to obtain annual counts if multiple years were used in the model
 number.of.years = 1 # Currently thinking is to provide counts by study period
+
 
 # We need to truncate the data differently for 
 # relative estimates compared with modeled numbers
@@ -69,20 +66,19 @@ trunc <-
     dp = c(2,2), # Number of decimal places for the estimates
     log_dp = c(4,2)) # Number of decimal places for the log estimates
 
+
+
 # The concordance file will make sure we have
 # a  row for all SA2s - even SA2s excluded from the modelling
 # Viser need data for all SA2s EXCEPT remote islands
 
 # Read in concordance data for BreastScreen data - use the concordance used for your modelling
-concordance <- global_obj$area_concor %>% 
-  dplyr::select(ps_area, SA2) %>% 
-  left_join(.,sa2_name)
-#load(paste0(fp.root, "Geography/Adj_matrix_concordance_BreastScreen.Rdata"))
+load(paste0(fp.root, "Geography/Adj_matrix_concordance_BreastScreen.Rdata"))
 
 # Remove remote islands
-# concordance <- subset(concordance, 
-#                       !grepl("Lord Howe|Norfolk Is|Cocos|Christmas Is", SA2_Name))
-# stopifnot(2288 == nrow(concordance))
+concordance <- subset(concordance, 
+                      !grepl("Lord Howe|Norfolk Is|Cocos|Christmas Is", SA2_Name))
+stopifnot(2288 == nrow(concordance))
 
 #################################################################################
 # 
@@ -118,38 +114,27 @@ concordance <- global_obj$area_concor %>%
 # You may construct this using "expand.grid" and then
 # filter out impossible combinations (eg female prostate cancer) and
 # merge in the codes to match the strings
-grid <- expand.grid(sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)),
-                    measure_level_code = c("01","04","07"))
-measure_level <- data.frame(measure_level_string = c("Relative ratios", "Modelled number of people", "Proportions"),
-                            measure_level_code = c("01", "04", "07"),
-                            measure_string = c("Relative", "Absolute", "Absolute"),
-                            measure_code = as.character(c(1,2,2)))
-sub_indicator <- data.frame(sub_indicator_string = c("Current smoker", "Risky alcohol consumption",
-                                                     "Inadequate diet", "Overweight or obese",
-                                                     "Obese", "Risky waist circumference",
-                                                     "Inadequate physical activity (leisure)",
-                                                     "Inadequate physical acitivty (all)"),
-                            sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)))
-
-# Combine all data
-Ref <- grid %>% 
-  left_join(.,measure_level) %>% 
-  left_join(sub_indicator) %>% 
-  mutate(model_string = "Spatial",
-         model_code = 3,
-         indicator_string = "Risk factors",
-         indicator_code = 03,
-         sub_sub_indicator_string = NA,
-         sub_sub_indicator_code = NA,
-         sex_string = "Persons",
-         sex_code = 3,
-         yeargrp = "2016-2017")
+Ref <- data.frame(model_string = "Spatial",
+                  model_code = 3,
+                  measure_string = c("Relative", "Absolute", "Absolute"),
+                  measure_code = c(1,2,2),
+                  measure_level_string = c("Relative ratios", "Modelled number of participants", "Modelled number of non-participants"),
+                  measure_level_code = c("01", "04", "06"),
+                  indicator_string = "Screening",
+                  indicator_code = "04",
+                  sub_indicator_string = "Breast cancer",
+                  sub_indicator_code = "033",
+                  sub_sub_indicator_string = NA,
+                  sub_sub_indicator_code = NA,
+                  sex_string = "Females",
+                  sex_code = 2,
+                  yeargrp = "2019-2020")
 
 # Construct a data set for the estimates
 # IMPORTANT:
 # ensure SA2_code and SA2_name are in the same order as your data / adjacency matrix
-final.format = data.frame(SA2_code = concordance$SA2,
-                          SA2_name = concordance$SA2_NAME,
+final.format = data.frame(SA2_code = concordance$SA2_Code_Short[!is.na(concordance$ID_2190)],
+                          SA2_name = concordance$SA2_Name[!is.na(concordance$ID_2190)],
                           p025 = NA, # These are for downloadable data
                           p10 = NA,
                           p20 = NA,

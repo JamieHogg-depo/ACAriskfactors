@@ -122,4 +122,21 @@ alcohol_b1$summ$sa2_map %>%
   tm_shape(.)+
   tm_polygons(col = "Median_tot_prsnl_inc_weekly")
 
+## What about smoking and physical activity ## ---------------------------------
+
+sa2_name <- map_sa2 %>% 
+  dplyr::select(SA2_MAIN16, SA2_NAME) %>% 
+  rename(SA2 = SA2_MAIN16) %>% 
+  mutate(SA2 = as.numeric(SA2)) %>% 
+  st_drop_geometry()
+
+summsa2all %>% 
+  left_join(.,sa2_name) %>%
+  group_by(model) %>% 
+  mutate(p = cut_number(mu_median, 100, labels = FALSE)) %>% 
+  ungroup() %>% 
+  filter(SA2_NAME %in% some_red_areas) %>% 
+  group_by(model) %>% 
+  summarise(yh = max(p))
+
 
