@@ -40,13 +40,26 @@ library(sf)
 library(openxlsx)
 rm(list = ls())
 
+# function to convert 9DIG to 5DIG
+s9_to_s5 <- function(x){paste0(str_sub(x, 1, 1), str_sub(x, start = -4))}
+
 ## Functions ## ----------------------------------------------------------------
 
 #source('src/wrangle/functions_ALL.R')
 #source('src/wrangle/moreFuns.R')
 
+# Load SA2 concordance file
+SA2_concordance <- read_csv("data/ViseR_Input_Data/Shapefile concordance.csv")
+
 # Load global data
 global_obj <- readRDS("data/DataLabExport/global_obj.rds")
+
+# Fix jervis bay SA2 and get 5dig sa2s
+area_concor <- global_obj$area_concor %>% 
+  mutate(SA2 = ifelse(SA2 == 114011271, 901031003, SA2),
+         SA2_5d = as.numeric(s9_to_s5(SA2))) %>% 
+  full_join(.,SA2_concordance, by = c("SA2_5d" = "SA2_Code_Short")) %>% 
+  filter(!SA2_NAME16 %in% c("Norfolk Island", "Lord Howe Island", "Christmas Island", "Cocos (Keeling) Islands"))
 
 # Load raw estimates
 raw_est <- pbapply::pblapply(list.files("data/DataLabExport", 
@@ -55,23 +68,13 @@ names(raw_est) <- str_remove(
   str_remove(
     list.files("data/DataLabExport", pattern = "raw_est_*"), "raw_est_"), ".rds")
 
-# load map
-map <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp")
+# # load map
+# map <- st_read("C:/r_proj/ACAriskfactors/data/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>% 
+#   mutate(SA2_5d = s9_to_s5(SA2_MAIN16))
 
 # SA2s not modelled
-na.sa2 <- as.numeric(map$SA2_MAIN[which(!map$SA2_MAIN %in% global_obj$area_concor$SA2)])
-na.sa2name <- map$SA2_NAME[which(!map$SA2_MAIN %in% global_obj$area_concor$SA2)]
-
-# wrangled map
-map_sa2_full <- map %>% 
-  mutate(SA2 = as.numeric(SA2_MAIN16)) %>%
-  filter(!str_detect(SA2_NAME, "Island")) %>%
-  filter(STATE_NAME != "Other Territories") %>% 
-  dplyr::select(SA2_MAIN16, SA2_NAME) %>% 
-  st_drop_geometry() %>% 
-  rename(SA2 = SA2_MAIN16,
-         SA2_name = SA2_NAME) %>% 
-  mutate(SA2 = as.numeric(SA2))
+na.sa2 <- as.numeric(area_concor$SA2_5d[is.na(area_concor$ps_area)])
+na.sa2name <- area_concor$SA2_NAME16[is.na(area_concor$ps_area)]
 
 # Load all modelled estimates
 summsa2all <- readRDS("data/summary_files/summsa2all.rds")
@@ -88,19 +91,19 @@ trunc <-
     dp = c(2,2), # Number of decimal places for the estimates
     log_dp = c(4,2)) # Number of decimal places for the log estimates
 
-# get map
-sa2_name <- st_drop_geometry(map) %>% 
-  mutate(SA2 = as.numeric(SA2_MAIN16)) %>%
-  dplyr::select(SA2, SA2_NAME)
-
-# concordance file
-concordance <- global_obj$area_concor %>% 
-  dplyr::select(ps_area, SA2) %>% 
-  left_join(.,sa2_name)
+# # get map
+# sa2_name <- st_drop_geometry(map) %>% 
+#   mutate(SA2 = as.numeric(SA2_MAIN16)) %>%
+#   dplyr::select(SA2, SA2_NAME)
+# 
+# # concordance file
+# concordance <- global_obj$area_concor %>% 
+#   dplyr::select(ps_area, SA2) %>% 
+#   left_join(.,sa2_name)
 
 # template for final output
-final.format = data.frame(SA2_code = concordance$SA2,
-                          SA2_name = concordance$SA2_NAME,
+final.format = data.frame(SA2_code = area_concor$SA2_5d[!is.na(area_concor$ps_area)],
+                          SA2_name = area_concor$SA2_NAME16[!is.na(area_concor$ps_area)],
                           p025 = NA, # These are for downloadable data
                           p10 = NA,
                           p20 = NA,
@@ -153,13 +156,13 @@ Ref <- grid %>%
   left_join(.,measure_level) %>% 
   left_join(sub_indicator) %>% 
   mutate(model_string = "Spatial",
-         model_code = 3,
+         model_code = "3",
          indicator_string = "Risk factors",
-         indicator_code = 03,
-         sub_sub_indicator_string = NA,
-         sub_sub_indicator_code = NA,
+         indicator_code = "03",
+         sub_sub_indicator_string = as.character(NA),
+         sub_sub_indicator_code = as.character(NA),
          sex_string = "Persons",
-         sex_code = 3,
+         sex_code = "3",
          yeargrp = "2017-2018") %>% 
   relocate(model_string, model_code, measure_string,
            measure_code, measure_level_string, measure_level_code,
@@ -170,7 +173,7 @@ Ref <- grid %>%
 
 ## Relative ratios #### --------------------------------------------------------
 
-or_estimates <- list()
+rr_estimates <- list()
 
 for(k in 1:8){
   
@@ -183,8 +186,8 @@ for(k in 1:8){
            measure_level_code == "01")
   
   # load data
-  modelled_est <- readRDS(file = paste0("data/DataLabExport/modelled_est_", rf, ".rds"))
-  draws <- modelled_est$or # odds ratios
+  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1_full.rds"))
+  draws <- modelled_est$draws$rr # relative ratios NOT odds ratios
   temp.quant <- final.format
   
   # Fix the number of decimal places
@@ -255,7 +258,7 @@ for(k in 1:8){
             ))
   
   # Store estimates in a list of data frames
-  or_estimates[[k]] <- 
+  rr_estimates[[k]] <- 
     cbind(
       temp.ref,
       temp.quant
@@ -264,7 +267,7 @@ for(k in 1:8){
   
 }
 
-or_estimates_all <- do.call("rbind", or_estimates)
+rr_estimates_all <- do.call("rbind", rr_estimates)
 
 ## FINISH RR ## ----------------------------------------------------------------
 
@@ -462,12 +465,70 @@ count_estimates_all <- do.call("rbind", count_estimates)
 # Final format and export
 # --------------------------------
 
-estimates = do.call("rbind", list(or_estimates_all, prop_estimates_all, count_estimates_all))
+estimates = do.call("rbind", list(rr_estimates_all, prop_estimates_all, count_estimates_all))
 
 # Remove row headings
 row.names(estimates) <- NULL
 
 # Export
 write.csv(estimates, file = "src/ACA_Database/RiskFactor estimates for ViseR.csv", row.names = FALSE)
+
+## National estimates ## -------------------------------------------------------
+
+sub_indicator <- data.frame(sub_indicator_string = c("Current smoker", "Risky alcohol consumption",
+                                                     "Inadequate diet", "Overweight or obese",
+                                                     "Obese", "Risky waist circumference",
+                                                     "Inadequate physical activity (leisure)",
+                                                     "Inadequate physical acitivty (all)"),
+                            jamie_ind = c("smoking", "alcohol", "diet",
+                                          "overweight", "obesity", "waist_circum",
+                                          "activityleis", "activityleiswkpl"),
+                            sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)),
+                            newCasesPerYear = rep(0.0, 8),
+                            ratePer100k = rep(0.0, 8))
+
+# Loop over raw estimates 
+for(i in 1:nrow(sub_indicator)){
+  if(sub_indicator$jamie_ind[i] == "waist_circum"){
+    tot_pop <- sum(global_obj$census$N_persons)
+    sub_indicator$newCasesPerYear[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop
+    sub_indicator$ratePer100k[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100000
+  }else{
+    tot_pop <- sum(global_obj$census$N_persons)
+    sub_indicator$newCasesPerYear[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop
+    sub_indicator$ratePer100k[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100000
+  }
+}
+
+# Add other columns and arrange
+Ref_national <- sub_indicator %>% 
+  dplyr::select(-jamie_ind) %>% 
+  mutate(model_string = "Spatial",
+         model_code = "3",
+         indicator_string = "Risk factors",
+         indicator_code = "03",
+         measure_level_string = "Number of cases",
+         measure_level_code = "2",
+         measure_code = "2",
+         sub_sub_indicator_string = as.character(NA),
+         sub_sub_indicator_code = as.character(NA),
+         sex_string = "Persons",
+         sex_code = "3",
+         yeargrp = "2017-2018",
+         p50 = NA,
+         logp50	= NA,
+         meet = NA) %>% 
+  relocate(model_string, model_code, 
+           measure_code, measure_level_string, measure_level_code,
+           indicator_string, indicator_code, sub_indicator_string,
+           sub_indicator_code, sub_sub_indicator_string,
+           sub_sub_indicator_code, sex_string,
+           sex_code, yeargrp)
+
+# Remove row headings
+row.names(Ref_national) <- NULL
+
+# Export
+write.csv(Ref_national, file = "src/ACA_Database/RiskFactor Aus for ViseR.csv", row.names = FALSE)
 
 ## SCRIPT END ## ---------------------------------------------------------------
