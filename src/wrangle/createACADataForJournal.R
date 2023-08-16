@@ -11,8 +11,10 @@ library(openxlsx)
 
 # create excel
 summsa2all %>% 
-  dplyr::select(SA2, model, contains(c("mu_", "rr_"))) %>% 
-  dplyr::select(-contains("logrr_")) %>% 
+  # fix jervis bay
+  mutate(SA2 = ifelse(SA2 == 114011271, 901031003, SA2)) %>% 
+  dplyr::select(SA2, model, contains(c("mu_", "or_"))) %>% 
+  dplyr::select(-contains("logor_")) %>% 
   rename(risk_factor = model,
          SA2_2016 = SA2) %>% 
   mutate(risk_factor = case_when(
