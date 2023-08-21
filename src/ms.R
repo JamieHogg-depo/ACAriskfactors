@@ -25,7 +25,7 @@ source('src/wrangle/moreFuns.R')
 
 ## Load adult population ## ----------------------------------------------------
 
-source("src/wrangle/getAdultPopulation.R")
+#source("src/wrangle/getAdultPopulation.R")
 SA2_ERP <- read_csv("data/DataLabExport/SA2_ERP.csv", col_types = cols(X1 = col_skip())) %>% 
   dplyr::select(SA2, N_persons_adults)
 

@@ -51,8 +51,13 @@ s9_to_s5 <- function(x){paste0(str_sub(x, 1, 1), str_sub(x, start = -4))}
 # Load SA2 concordance file
 SA2_concordance <- read_csv("data/ViseR_Input_Data/Shapefile concordance.csv")
 
+# Load adult pop
+SA2_ERP <- read_csv("data/DataLabExport/SA2_ERP.csv", col_types = cols(X1 = col_skip())) %>% 
+  dplyr::select(SA2, N_persons_adults)
+
 # Load global data
 global_obj <- readRDS("data/DataLabExport/global_obj.rds")
+global_obj$census <- left_join(global_obj$census, SA2_ERP)
 
 # Fix jervis bay SA2 and get 5dig sa2s
 area_concor <- global_obj$area_concor %>% 
@@ -369,6 +374,7 @@ prop_estimates_all <- do.call("rbind", prop_estimates)
 ## Counts #### -----------------------------------------------------------------
 
 count_estimates <- list()
+nat_count <- list()
 
 for(k in 1:8){
   
@@ -384,6 +390,9 @@ for(k in 1:8){
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1_full.rds"))
   draws <- modelled_est$draws$count # count
   temp.quant <- final.format
+  
+  # Get posterior median national count
+  nat_count[[k]] <- median(apply(draws, 1, sum))
   
   # Fix the number of decimal places
   dp = trunc$dp[trunc$measure == "Absolute"]
@@ -458,6 +467,7 @@ for(k in 1:8){
 }
 
 count_estimates_all <- do.call("rbind", count_estimates)
+names(nat_count) <- names(raw_est)
 
 ## FINISH count ## -------------------------------------------------------------
 
@@ -485,16 +495,19 @@ sub_indicator <- data.frame(sub_indicator_string = c("Current smoker", "Risky al
                                           "activityleis", "activityleiswkpl"),
                             sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)),
                             newCasesPerYear = rep(0.0, 8),
+                            #summedCounts = rep(0.0, 8),
                             ratePer100k = rep(0.0, 8))
 
 # Loop over raw estimates 
 for(i in 1:nrow(sub_indicator)){
   if(sub_indicator$jamie_ind[i] == "waist_circum"){
-    tot_pop <- sum(global_obj$census$N_persons)
+    tot_pop <- sum(global_obj$census$N_persons_adults)
+    #sub_indicator$summedCounts[i] = nat_count[[which(names(nat_count)==sub_indicator$jamie_ind[i])]]
     sub_indicator$newCasesPerYear[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop
     sub_indicator$ratePer100k[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100000
   }else{
     tot_pop <- sum(global_obj$census$N_persons)
+    #sub_indicator$summedCounts[i] = nat_count[[which(names(nat_count)==sub_indicator$jamie_ind[i])]]
     sub_indicator$newCasesPerYear[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop
     sub_indicator$ratePer100k[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100000
   }
