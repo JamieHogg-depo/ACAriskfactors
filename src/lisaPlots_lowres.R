@@ -16,13 +16,15 @@ ec_df <- summsa2all %>%
          out = factor(ifelse(is.na(LISA_mu) & !is.na(ec), 
                              ec, as.character(LISA_mu)),
                       levels = c("HC", "H", "L", "LC")),
+         out = fct_explicit_na(out, na_level = "N"),
          model = getRFFullNames(model),
          ra = factor(ifelse(ra_sa2_3c == "Outer regional to very remote", 
                             "Outer regional\nto very remote", 
                             as.character(ra_sa2_3c)),
                      levels = c("Major Cities",
                                 "Inner Regional",
-                                "Outer regional\nto very remote")))
+                                "Outer regional\nto very remote"))) %>% 
+  relocate(out)
 
 # IRSD
 
@@ -32,11 +34,12 @@ ec1 <- ec_df %>%
   group_by(model, irsd_5c) %>% 
   summarise(HC = sum(ww*(out == "HC"), na.rm= T),
             H = sum(ww*(out == "H"), na.rm= T),
+            N = sum(ww*(out == "N"), na.rm= T),
             L = sum(ww*(out == "L"), na.rm= T),
             LC = sum(ww*(out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, irsd_5c)) %>% 
-  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")))
+  mutate(out = factor(name, levels = c("HC", "H", "N", "L", "LC")))
 
 # non-weighted
 ec2 <- ec_df %>% 
@@ -44,11 +47,12 @@ ec2 <- ec_df %>%
   group_by(model, irsd_5c) %>% 
   summarise(HC = sum((out == "HC"), na.rm= T),
             H = sum((out == "H"), na.rm= T),
+            N = sum((out == "N"), na.rm= T),
             L = sum((out == "L"), na.rm= T),
             LC = sum((out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, irsd_5c)) %>% 
-  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")),
+  mutate(out = factor(name, levels = c("HC", "H", "N", "L", "LC")),
          uw_value = value) %>% 
   dplyr::select(uw_value)
 
@@ -63,11 +67,12 @@ ec1 <- ec_df %>%
   group_by(model, ra) %>% 
   summarise(HC = sum(ww*(out == "HC"), na.rm= T),
             H = sum(ww*(out == "H"), na.rm= T),
+            N = sum(ww*(out == "N"), na.rm= T),
             L = sum(ww*(out == "L"), na.rm= T),
             LC = sum(ww*(out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, ra)) %>% 
-  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")))
+  mutate(out = factor(name, levels = c("HC", "H", "N", "L", "LC")))
 
 # non-weighted
 ec2 <- ec_df %>% 
@@ -75,11 +80,12 @@ ec2 <- ec_df %>%
   group_by(model, ra) %>% 
   summarise(HC = sum((out == "HC"), na.rm= T),
             H = sum((out == "H"), na.rm= T),
+            N = sum((out == "N"), na.rm= T),
             L = sum((out == "L"), na.rm= T),
             LC = sum((out == "LC"), na.rm= T),
             .groups = "drop") %>% 
   pivot_longer(-c(model, ra)) %>% 
-  mutate(out = factor(name, levels = c("HC", "H", "L", "LC")),
+  mutate(out = factor(name, levels = c("HC", "H", "N", "L", "LC")),
          uw_value = value) %>% 
   dplyr::select(uw_value)
 
@@ -97,13 +103,34 @@ ec_irsd %>%
        x = "",
        y = "")+
   theme(legend.position = "bottom")+
-  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HC", "H", "L", "LC"))+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))+
   theme(text = element_text(size = 8))
 
 # save object
 jsave(filename = paste0("ec_irsd_barchart_pw_cec.png"), 
+      base_folder = paste0(base_folder, "/figures_lowres/ec"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      dpi = 300)
+
+# irsd - stack
+ec_irsd %>% 
+  ggplot()+theme_bw()+
+  geom_bar(aes(x = value, y = irsd_5c, fill = out), position = "stack", stat = "identity")+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
+  scale_x_continuous(breaks=c(0,200, 400))+
+  theme(text = element_text(size = 8))
+
+# save object
+jsave(filename = paste0("ec_irsd_barstack_pw_cec.png"), 
       base_folder = paste0(base_folder, "/figures_lowres/ec"),
       square = F, ratio = 9:6,
       square_size = 1200,
@@ -118,8 +145,8 @@ ec_irsd %>%
        x = "",
        y = "")+
   theme(legend.position = "bottom")+
-  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HC", "H", "L", "LC"))+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))+
   theme(text = element_text(size = 8))
 
@@ -139,13 +166,34 @@ ec_ra %>%
        x = "",
        y = "")+
   theme(legend.position = "bottom")+
-  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HC", "H", "L", "LC"))+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))+
   theme(text = element_text(size = 8))
 
 # save object
 jsave(filename = paste0("ec_ra_barchart_pw_cec.png"), 
+      base_folder = paste0(base_folder, "/figures_lowres/ec"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      dpi = 300)
+
+# ra - stack
+ec_ra %>% 
+  ggplot()+theme_bw()+
+  geom_bar(aes(x = value, y = ra, fill = out), position = "stack", stat = "identity")+
+  facet_wrap(.~model)+
+  labs(fill = "",
+       x = "",
+       y = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
+  scale_x_continuous(breaks=c(0,750,1500))+
+  theme(text = element_text(size = 8))
+
+# save object
+jsave(filename = paste0("ec_ra_barstack_pw_cec.png"), 
       base_folder = paste0(base_folder, "/figures_lowres/ec"),
       square = F, ratio = 9:6,
       square_size = 1200,
@@ -160,8 +208,8 @@ ec_ra %>%
        x = "",
        y = "")+
   theme(legend.position = "bottom")+
-  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HC", "H", "L", "LC"))+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
   scale_x_continuous(breaks=c(0,150, 300))+
   theme(text = element_text(size = 8))
 
@@ -257,6 +305,11 @@ jsave(filename = paste0("ec_ra_barfill_pw_cf.png"),
       square = F, ratio = 9:6,
       square_size = 1200,
       dpi = 300)
+
+
+## END SCRIPT #### -------------------------------------------------------------
+
+## START DEPREC #### -----------------------------------------------------------
 
 ## FACTOR: EC ## ---------------------------------------------------------------
 
@@ -590,4 +643,4 @@ jsave(filename = paste0("ec_irsd_barfill_npw_cec.png"),
       square_size = 1200,
       dpi = 300)
 
-## END SCRIPT #### -------------------------------------------------------------
+## END DEPREC #### -------------------------------------------------------------
