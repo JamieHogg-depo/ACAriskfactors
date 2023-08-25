@@ -317,3 +317,13 @@ eps2png <- function(epsfile, dpi=300, gray=FALSE, ag=4, at=4)
   system(png.cmd)
   system(opt.cmd)
 }
+
+## -----------------------------------------------------------------------------
+#' @param inn numeric vector
+#' @returns index from 1:length(inn) of order
+jOrder <- function(inn){
+  temp <- data.frame(x = inn[order(inn)],
+                     id = 1:length(inn))
+  out <- left_join(data.frame(x = inn), temp, by = "x")
+  return(out$id)
+}

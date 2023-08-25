@@ -371,6 +371,74 @@ jsave(filename = paste0("binnedprev_ra_", rf ,".png"),
       square_size = 1200,
       dpi = 300)
 
+## OR caterpillar plots ## -----------------------------------------------------
+
+summsa2all %>% 
+  filter(model == rf) %>% 
+  group_by(irsd_5c) %>% 
+  mutate(x = jOrder(logor_median)) %>% 
+  ungroup() %>% 
+  ggplot(aes(y = logor_median,
+             ymin = logor_lower,
+             ymax = logor_upper,
+             x = x,
+             col = or_EP))+
+  theme_bw()+
+  theme(legend.position = "bottom",
+        text = element_text(size = 8))+
+  geom_hline(yintercept = 0)+
+  geom_errorbar(col = "grey")+
+  geom_point()+
+  facet_wrap(.~irsd_5c)+
+  labs(y = "Log ORs",
+       x = "", color = "Exceedance\nprobability",
+       title = rf_full)+
+  scale_color_gradientn(colors = c("#008837", "#a6dba0", "black","black","black", "#c2a5cf", "#7b3294"),
+                        limits = c(-0.0000001,1.0000001),
+                        #oob = squish,
+                        #trans = "logit",
+                        breaks = c(0,0.2,0.25,0.5,0.75,0.8,1),
+                        labels = as.character(c(0,0.2,"",0.5,"",0.8,1)))
+
+jsave(filename = paste0("orcaterpillar_irsd_", rf,".png"), 
+      base_folder = paste0(base_folder, "/figures_lowres"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      dpi = 300)
+
+summsa2all %>% 
+  filter(model == rf) %>% 
+  group_by(ra_sa2_3c) %>% 
+  mutate(x = jOrder(logor_median)) %>% 
+  ungroup() %>% 
+  ggplot(aes(y = logor_median,
+             ymin = logor_lower,
+             ymax = logor_upper,
+             x = x,
+             col = or_EP))+
+  theme_bw()+
+  theme(legend.position = "bottom",
+        text = element_text(size = 8))+
+  geom_hline(yintercept = 0)+
+  geom_errorbar(col = "grey")+
+  geom_point()+
+  facet_wrap(.~ra_sa2_3c, scales = "free_x")+
+  labs(y = "Log ORs",
+       x = "", color = "Exceedance\nprobability",
+       title = rf_full)+
+  scale_color_gradientn(colors = c("#008837", "#a6dba0", "black","black","black", "#c2a5cf", "#7b3294"),
+                        limits = c(-0.0000001,1.0000001),
+                        #oob = squish,
+                        #trans = "logit",
+                        breaks = c(0,0.2,0.25,0.5,0.75,0.8,1),
+                        labels = as.character(c(0,0.2,"",0.5,"",0.8,1)))
+
+jsave(filename = paste0("orcaterpillar_ra_", rf,".png"), 
+      base_folder = paste0(base_folder, "/figures_lowres"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      dpi = 300)
+
 ## FINISH FOR LOOP #### --------------------------------------------------------
 
 }
