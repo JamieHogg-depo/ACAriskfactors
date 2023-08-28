@@ -229,7 +229,7 @@ lay <- rbind(c(9,1,1,1,1,2),
              c(4,10,10,10,10,7))
 sa2_full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
                                   layout_matrix  = lay,
-                                  top = textGrob(rf_full,gp=gpar(fontsize=6)))
+                                  top = textGrob("Obese",gp=gpar(fontsize=6)))
 
 ## JOIN and save ##
 sa2pha_joined <- arrangeGrob(grobs = list(sa2_full_inset_plt,
