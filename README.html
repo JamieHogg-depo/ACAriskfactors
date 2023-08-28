@@ -171,28 +171,28 @@ pre code {
 </div>
 
 
-<div id="acariskfactors" class="section level1">
-<h1>ACAriskfactors</h1>
+<div id="mapping-the-prevalence-of-cancer-risk-factors-at-the-small-area-level-in-australia" class="section level1">
+<h1>Mapping the prevalence of cancer risk factors at the small area level in Australia</h1>
 <p>This repository contains the code and modelled results described in the manuscript “Mapping the prevalence of cancer risk factors at the small area level in Australia” by James Hogg, Jessica Cameron, Susanna Cramb, Peter Baade and Kerrie Mengersen.</p>
 <p>The modelled results are available in long-format in the dataset <code>ModelledEstimates.csv</code>. This dataset contains the following columns.</p>
 <ul>
 <li><code>SA2_2016</code>: The 2016 9-digit SA2 codes</li>
 <li><code>risk_factor</code>: Risk factor names</li>
 </ul>
-<p>Plus the following 11 columns for each of the absolute (proportions) and relative (odds ratios)</p>
+<p>Plus the following 11 columns for each of the absolute (proportions - <code>mu_*</code>) and relative (odds ratios - <code>or_*</code>)</p>
 <ul>
 <li><code>*_mean</code>: Posterior mean</li>
 <li><code>*_median</code>: Posterior median</li>
 <li><code>*_sd</code>: Posterior standard deviation</li>
 <li><code>*_lower</code>: Lower limit of 95% highest posterior density interval (HPDI)</li>
-<li><code>*_upper</code>: Upper limit of 95% highest posterior density interval (HPDI)</li>
-<li><code>*_hpd38</code>: Interval size for 38th confidence interval (Bayesian analogue of <code>*_sd</code>)</li>
+<li><code>*_upper</code>: Upper limit of 95% HPDI</li>
+<li><code>*_hpd38</code>: Interval size for 38% HPDI (Bayesian analogue of <code>*_sd</code>)</li>
 <li><code>*_CV</code>: Coefficient of variation (%) using <code>*_sd</code></li>
 <li><code>*_CV_b</code>: Coefficient of variation (%) using <code>*_hpd38</code></li>
 <li><code>*_cisize</code>: <code>*_upper</code> - <code>*_lower</code></li>
 <li><code>*_EP</code>: Exceedance probability</li>
 <li><code>*_DPP</code>: Difference in posterior probability</li>
-<li><code>*_DPPsig</code>:</li>
+<li><code>*_DPPsig</code>: Binary vector indicating significant DPPs (cutoff &gt; 0.6)</li>
 </ul>
 </div>
 

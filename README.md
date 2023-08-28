@@ -1,4 +1,4 @@
-# ACAriskfactors
+# Mapping the prevalence of cancer risk factors at the small area level in Australia
 
 This repository contains the code and modelled results described in the manuscript "Mapping the prevalence of cancer risk factors at the small area level in Australia" by James Hogg, Jessica Cameron, Susanna Cramb, Peter Baade and Kerrie Mengersen.
 
@@ -7,7 +7,7 @@ The modelled results are available in long-format in the dataset `ModelledEstima
 - `SA2_2016`: The 2016 9-digit SA2 codes
 - `risk_factor`: Risk factor names
 
-Plus the following 11 columns for each of the absolute (proportions) and relative (odds ratios)
+Plus the following 11 columns for each of the absolute (proportions - `mu_*`) and relative (odds ratios - `or_*`)
 
 - `*_mean`: Posterior mean
 - `*_median`: Posterior median
