@@ -6,6 +6,8 @@
 #          
 #==========================================================================
 
+#out <- dplyr::bind_rows(lapply(list.files("Z:/tangoaca/outputs/20230830/r/", full.names = T), readRDS))
+
 # Packages
 library(tidyverse)
 library(readr)

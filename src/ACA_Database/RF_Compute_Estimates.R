@@ -513,9 +513,15 @@ for(i in 1:nrow(sub_indicator)){
   }
 }
 
+# Load Tango's MEET
+tm <- dplyr::bind_rows(lapply(list.files("Z:/tangoaca/outputs/20230830/r/", full.names = T), readRDS))
+tm <- tm %>% group_by(z) %>% summarise(p.meet = mean(pvalue))
+tm$meet <- rep(0 + as.numeric(tm$p.meet < 0.1) + as.numeric(tm$p.meet < 0.05) + as.numeric(tm$p.meet < 0.01))
+
 # Add other columns and arrange
 Ref_national <- sub_indicator %>% 
-  dplyr::select(-jamie_ind) %>% 
+  left_join(.,tm, by = c("jamie_ind" = "z")) %>% 
+  dplyr::select(-c(jamie_ind, p.meet)) %>% 
   mutate(model_string = "Spatial",
          model_code = "3",
          indicator_string = "Risk factors",
@@ -530,8 +536,7 @@ Ref_national <- sub_indicator %>%
          sex_code = "3",
          yeargrp = "2017-2018",
          p50 = NA,
-         logp50	= NA,
-         meet = NA) %>% 
+         logp50	= NA) %>% 
   relocate(model_string, model_code, 
            measure_string, measure_code, 
            measure_level_string, measure_level_code,
