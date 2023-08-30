@@ -96,9 +96,10 @@ MEET_p <- data.frame(combo = names(raw_est),
                      tm3 = NA)
 
 # Three replicates 
+m_s <- Sys.time()
 for(y in 1:3){
   
-message(paste0("y: ", y))
+message(paste0("Time: ", Sys.time(), "\ny: ", y))
   
 # All risk factors
 for(z in MEET_p$combo){
@@ -114,12 +115,28 @@ dat.tango <- data.frame(id = rf_fl$ID_2238[!is.na(rf_fl$ID_2238)],
                         e = rf_fl$e[!is.na(rf_fl$ID_2238)],
                         j = 1) %>% 
   left_join(.,SA2_lat_lon, by = "id") %>% 
-  slice(1:100)
+  slice(1:300)#%>% 
+  # mutate(d = rpois(nrow(.),10),
+  #        e = rnorm(nrow(.),d, 0.1))
 
-#MEET_p[MEET_p$combo == z, paste0("tm", y)] <- acaTangoMeet(dat.tango, nloop = 5, j_verbose = FALSE)
+MEET_p[MEET_p$combo == z, paste0("tm", y)] <- acaTangoMeet(dat.tango, nloop = 500, j_verbose = FALSE)
 
-#}
-#}
+}
+}
+as.numeric(Sys.time() - m_s, units = "mins")
+MEET_p
+
+# takes an hour to fit 1000 areas and nloop 10
+# takes to fit 500 areas and nloop 10
+# takes to fit 100 areas and nloop 10
+# takes to fit 100 areas and nloop 100
+# takes to fit 100 areas and nloop 500
+perf_data <- data.frame(rt = c(60, 8, 0.2, 1.6, 7.5, 17.8, 29.4),
+                        areas = c(1000, 500, 100, 100, 100, 200, 300),
+                        nloop = c(10, 10, 100, 500, 500, 500, 500))
+fit <- lm(log(rt) ~ areas*nloop, data = perf_data)
+summary(fit)
+exp(predict(fit, newdata = data.frame(areas = c(1000), nloop = c(10))))/60/24
 
 # Code from `2E Tango's MEET`  
   nloop<-999
