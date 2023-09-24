@@ -188,6 +188,7 @@ ec_ra %>%
        y = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    #labels = expression(H[cluster], H[single], N, L[single], L[cluster]),
                     breaks = c("HC", "H", "N", "L", "LC"))+
   scale_x_continuous(breaks=c(0,750,1500))+
   theme(text = element_text(size = 8))
