@@ -528,6 +528,7 @@ for(k in 1:8){
   rf <- names(raw_est)[k]
   rf_full <- lookup[k,]$rf_full
   message("Started ", k, ": ", rf)
+  m_s <- Sys.time()
   
   # load data
   modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
@@ -1456,6 +1457,8 @@ rm(base, base_boxes, llegend, base_legend, lay, or_full_inset_plt, orep_full_ins
 message("---- Finished OR_EP joined")
 
 ## FINISH FOR LOOP #### --------------------------------------------------------
+
+message(paste0("Run time (mins): ", round(as.numeric(Sys.time() - m_s, units = "mins"), 2)))
 
 }
 

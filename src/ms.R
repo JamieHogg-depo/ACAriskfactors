@@ -92,10 +92,10 @@ lims <- data.frame(
   position = c("r", "r", "b", "l", "b", "b", "r", "l"),
   inset_labs = c("B - Brisbane (Qld)", "S - Sydney (NSW)",
                  "M - Melbourne (Vic)", "P - Perth (WA)",
-                 "A - Adelaide (SA)", "H - Hobart (Tas)",
+                 "A - Adelaide (SA)", "Ho - Hobart (Tas)",
                  "C - Canberra (ACT)", "D - Darwin (NT)")
 ) %>% 
-  mutate(initials = str_sub(city, 1, 1))
+  mutate(initials = c("B", "S", "M", "P", "A", "Ho", "C", "D"))
 
 # quantiles for IRSD
 irsd_5c <- mutate(global_obj$census, 
