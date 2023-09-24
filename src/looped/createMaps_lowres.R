@@ -1229,18 +1229,20 @@ modelled_est$summ$sa2_map <- modelled_est$summ$sa2 %>%
 # base map
 base <- modelled_est$summ$sa2_map %>% 
   mutate(LISA_mu = case_when(
-    LISA_mu == "HH" ~ "HC",
-    LISA_mu == "LL" ~ "LC"
-  ),
-         lisa = ifelse(or_EP > 0.8, "H", 
-                       ifelse(or_EP < 0.2, "L", NA)),
-         LISA_c = factor(ifelse(is.na(LISA_mu) & !is.na(lisa), lisa, as.character(LISA_mu)),
-                         levels = c("HC", "H", "L", "LC"))) %>% 
+                    LISA_mu == "HH" ~ "HC",
+                    LISA_mu == "LL" ~ "LC"
+                    ),
+        lisa = ifelse(or_EP > 0.8, "H", 
+                     ifelse(or_EP < 0.2, "L", NA)),
+        LISA_c = factor(ifelse(is.na(LISA_mu) & !is.na(lisa), lisa, as.character(LISA_mu)),
+                       levels = c("HC", "H", "L", "LC")),
+        LISA_c = fct_explicit_na(LISA_c, na_level = "N")) %>% 
   ggplot()+
   theme_void()+
   geom_sf(aes(fill = LISA_c), col = NA)+
-  scale_fill_manual(values = c("red", "coral", "skyblue", "royalblue"),
-                    breaks = c("HC", "H", "L", "LC"))+
+  scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
+                    labels = expression(H[cluster], H[single], N, L[single], L[cluster]),
+                    breaks = c("HC", "H", "N", "L", "LC"))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
