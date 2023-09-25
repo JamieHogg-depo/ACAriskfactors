@@ -1242,7 +1242,7 @@ base <- modelled_est$summ$sa2_map %>%
   theme_void()+
   geom_sf(aes(fill = LISA_c), col = NA)+
   scale_fill_manual(values = c("red", "coral", "grey", "skyblue", "royalblue"),
-                    labels = expression(H[cluster], H[single], N, L[single], L[cluster]),
+                    #labels = expression(H[cluster], H[single], N, L[single], L[cluster]),
                     breaks = c("HC", "H", "N", "L", "LC"))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
