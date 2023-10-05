@@ -125,7 +125,7 @@ base <-pha_estimates %>%
   geom_sf(data = state_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.1)+
   theme(legend.position = "none",
-        text = element_text(size = 3.5),
+        text = element_text(size = 5),
         plot.title = element_text(margin = margin(0,0,2,0)),
         plot.margin = unit(c(1,1,1,1), "mm"))
 
@@ -142,7 +142,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 1.5)
 }
 
 # Create list of insets
@@ -188,7 +188,7 @@ base <- modelled_est$summ$sa2_map %>%
   geom_sf(data = state_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.1)+
   theme(legend.position = "none",
-        text = element_text(size = 3.5),
+        text = element_text(size = 5),
         plot.title = element_text(margin = margin(0,0,2,0)),
         plot.margin = unit(c(1,1,1,1), "mm"))
 
@@ -205,7 +205,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 1.5)
 }
 
 # Create list of insets
@@ -238,6 +238,12 @@ sa2pha_joined <- arrangeGrob(grobs = list(sa2_full_inset_plt,
 
 jsave(filename = "phasa2mu_obesity.png", 
       base_folder = paste0(base_folder, "/maps_lowres"),
+      plot = sa2pha_joined, square = F,
+      ratio = c(9,6),
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "fig7.jpeg", 
+      base_folder = paste0(base_folder, "/paper"),
       plot = sa2pha_joined, square = F,
       ratio = c(9,6),
       square_size = 1200,
@@ -380,6 +386,11 @@ full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list),
 # save object
 jsave(filename = paste0("sampled.png"), 
       base_folder = paste0(base_folder, "/maps_lowres"),
+      plot = full_inset_plt, square = F,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "fig1.jpeg", 
+      base_folder = paste0(base_folder, "/paper"),
       plot = full_inset_plt, square = F,
       square_size = 1200,
       dpi = 300)
@@ -1349,7 +1360,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 1.5)
 }
 
 # Create list of insets
@@ -1415,7 +1426,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 1.5)
 }
 
 # Create list of insets
@@ -1451,6 +1462,22 @@ jsave(filename = paste0("orjoined_", rf ,".png"),
       ratio = c(9,6),
       square_size = 1200,
       dpi = 300)
+if(rf == "activityleiswkpl"){
+  jsave(filename = "fig6.jpeg", 
+        base_folder = paste0(base_folder, "/paper"),
+        plot = or_joined, square = F,
+        ratio = c(9,6),
+        square_size = 1200,
+        dpi = 300)
+}
+if(rf == "alcohol"){
+  jsave(filename = "fig5.jpeg", 
+        base_folder = paste0(base_folder, "/paper"),
+        plot = or_joined, square = F,
+        ratio = c(9,6),
+        square_size = 1200,
+        dpi = 300)
+}
 
 # cleanup
 rm(base, base_boxes, llegend, base_legend, lay, or_full_inset_plt, orep_full_inset_plt, or_joined)

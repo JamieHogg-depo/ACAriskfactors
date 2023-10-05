@@ -43,7 +43,7 @@ make_numeric_decimal <- function(.data, digits = 2){
 }
 
 # adds boxlabels to maps
-addBoxLabel <- function(i, color = "white", size = 0.5){
+addBoxLabel <- function(i, color = "white", size = 0.5, textsize = 3){
   if(lims$position[i] == "r"){
     list(
       annotate("rect", 
@@ -51,8 +51,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", y = mean(c(lims$ymin[i], lims$ymax[i])), 
-               x = lims$xmax[i] + 1, label = lims$initials[i],
-               size = 3) 
+               x = lims$xmax[i] + lims$jitter[i], label = lims$initials[i],
+               size = textsize) 
     )
   } else if(lims$position[i] == "b"){
     list(
@@ -61,8 +61,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", x = mean(c(lims$xmin[i], lims$xmax[i])), 
-               y = lims$ymin[i] - 1, label = lims$initials[i],
-               size = 3) 
+               y = lims$ymin[i] - lims$jitter[i], label = lims$initials[i],
+               size = textsize) 
     )
   } else if(lims$position[i] == "l"){
     list(
@@ -71,8 +71,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", y = mean(c(lims$ymin[i], lims$ymax[i])), 
-               x = lims$xmin[i] - 1, label = lims$initials[i],
-               size = 3) 
+               x = lims$xmin[i] - lims$jitter[i], label = lims$initials[i],
+               size = textsize) 
     )
   }else{
     list(
@@ -81,8 +81,8 @@ addBoxLabel <- function(i, color = "white", size = 0.5){
                ymin = lims$ymin[i], ymax = lims$ymax[i],
                color = color, fill = NA, size = size),
       annotate("text", x = mean(c(lims$xmin[i], lims$xmax[i])), 
-               y = lims$ymax[i] + 1, label = lims$initials[i],
-               size = 3) 
+               y = lims$ymax[i] + lims$jitter[i], label = lims$initials[i],
+               size = textsize) 
     )
   }
 }

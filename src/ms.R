@@ -93,7 +93,8 @@ lims <- data.frame(
   inset_labs = c("B - Brisbane (Qld)", "S - Sydney (NSW)",
                  "M - Melbourne (Vic)", "P - Perth (WA)",
                  "A - Adelaide (SA)", "Ho - Hobart (Tas)",
-                 "C - Canberra (ACT)", "D - Darwin (NT)")
+                 "C - Canberra (ACT)", "D - Darwin (NT)"),
+  jitter = c(1,1,1,1,1,1,2,1)
 ) %>% 
   mutate(initials = c("B", "S", "M", "P", "A", "Ho", "C", "D"))
 

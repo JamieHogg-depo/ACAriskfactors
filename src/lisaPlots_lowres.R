@@ -200,6 +200,11 @@ jsave(filename = paste0("ec_ra_barstack_pw_cec.png"),
       square = F, ratio = 9:6,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig8.jpeg", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      dpi = 300)
 
 # ra - fill
 ec_ra %>% 

@@ -33,6 +33,11 @@ jsave(filename = paste0("summary_violin.png"),
       square = F,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig4.jpeg", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F,
+      square_size = 1200,
+      dpi = 300)
   
 ## Scatter: Two-way SHA PHA vs ACA  - smoking and obesity - SA2 #### -----------
   
@@ -157,6 +162,12 @@ jsave(filename = paste0("scattersha_smokingobesity_pha.png"),
       square = T,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig9.jpeg", 
+      base_folder = paste0(base_folder, "/paper"),
+      plot = full_plt,
+      square = T,
+      square_size = 1200,
+      dpi = 300)
 
 # cleanup
 rm(full_plt, sm_plt, ob_plt, sm, ob)
@@ -216,6 +227,11 @@ nb_data %>%
 # save object
 jsave(filename = paste0("benchmarkcomp.png"), 
       base_folder = paste0(base_folder, "/figures_lowres"),
+      square = F,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "fig10.jpeg", 
+      base_folder = paste0(base_folder, "/paper"),
       square = F,
       square_size = 1200,
       dpi = 300)
