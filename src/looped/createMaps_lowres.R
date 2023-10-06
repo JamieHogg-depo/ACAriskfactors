@@ -53,7 +53,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -358,7 +358,7 @@ base <- map_sa2 %>%
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -427,7 +427,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -497,7 +497,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -580,7 +580,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -649,7 +649,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -733,7 +733,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -805,7 +805,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -882,7 +882,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -969,7 +969,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -1053,7 +1053,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -1122,7 +1122,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -1196,7 +1196,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
@@ -1274,7 +1274,7 @@ llegend <- ggpubr::get_legend(base_legend)
 base_boxes <- base
 for(i in 1:8){
   base_boxes <- base_boxes + 
-    addBoxLabel(i, color = "black", size = 0.2)
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
 }
 
 # Create list of insets
