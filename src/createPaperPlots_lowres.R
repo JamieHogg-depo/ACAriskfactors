@@ -381,4 +381,24 @@ res
 corrplot(res, type = "upper", 
          tl.col = "black", tl.srt = 45)
 
+## RSE vs ERP ## ---------------------------------------------------------------
+
+summsa2all %>% 
+  mutate(ra_sa2_3c = fct_relevel(ra_sa2_3c, "Major Cities")) %>% 
+  ggplot(aes(y = rr_CV_b, log(N_persons), col = ra_sa2_3c))+
+  theme_bw()+
+  geom_point()+
+  facet_wrap(.~model)+
+  geom_hline(yintercept = 50)+
+  labs(y = "Bayesian RSE for Relative Ratios",
+       x = "log(ERP)",
+       col = "")+
+  theme(legend.position = "bottom")
+
+jsave(filename = "rse vs pop.png", 
+      base_folder = paste0(base_folder, "/figures_lowres"),
+      square = T,
+      square_size = 1200,
+      dpi = 300)
+
 ## END SCRIPT #### -------------------------------------------------------------
