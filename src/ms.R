@@ -142,4 +142,12 @@ source("src/wrangle/getSHA.R")
 
 source("src/wrangle/loadCensusData.R")
 
+## To cut ## -------------------------------------------------------------------
+
+s9_to_s5 <- function(x){paste0(str_sub(x, 1, 1), str_sub(x, start = -4))}
+flt <- filter(summsa2all, rr_CV_b > 50 | N_persons < 100)
+SA2_to_suppress <- split(flt$SA2, flt$model)
+SA2_to_suppress <- lapply(SA2_to_suppress, s9_to_s5)
+#saveRDS(SA2_to_suppress, "data/ViseR_Input_Data/SA2_to_suppress.rds")
+
 ## END SCRIPT ## --------------------------------------------------------------
