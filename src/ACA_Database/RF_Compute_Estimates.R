@@ -22,13 +22,10 @@
 #        Combine estimates with empty rows for areas excluded from modelling
 #        Combine estimates with meta data
 #        Combine all estimates and save as csv
-#
-# Notes:
-#        We may need to alter the format to accommodate the downloadable data
 #        
 # Authors: Jamie Hogg
 # Created: 04/08/23 (Based on "Compute Estimates and Wave Plot Combined" script)
-# Updated: 14/08/23
+# Updated: 1/11/23
 #          
 #==========================================================================
 
@@ -140,9 +137,9 @@ source("src/ACA_Database/getWavePlotVars2.R")
 # You may construct this using "expand.grid" and then
 # filter out impossible combinations (eg female prostate cancer) and
 # merge in the codes to match the strings
-grid <- expand.grid(sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)),
+grid <- expand.grid(sub_indicator_code = paste0("00", c(1,2,3,4,5,6,7,8)),
                     measure_level_code = c("01","04","07"))
-measure_level <- data.frame(measure_level_string = c("Relative ratios", "Modelled number of people", "Proportions"),
+measure_level <- data.frame(measure_level_string = c("Relative ratios", "Modelled number of cases", "Proportions"),
                             measure_level_code = c("01", "04", "07"),
                             measure_string = c("Relative", "Absolute", "Absolute"),
                             measure_code = as.character(c(1,2,2)))
@@ -154,7 +151,7 @@ sub_indicator <- data.frame(sub_indicator_string = c("Current smoker", "Risky al
                             jamie_ind = c("smoking", "alcohol", "diet",
                                            "overweight", "obesity", "waist_circum",
                                            "activityleis", "activityleiswkpl"),
-                            sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)))
+                            sub_indicator_code = paste0("00", c(1,2,3,4,5,6,7,8)))
 
 # Combine all data
 Ref <- grid %>% 
@@ -475,13 +472,42 @@ names(nat_count) <- names(raw_est)
 # Final format and export
 # --------------------------------
 
-estimates = do.call("rbind", list(rr_estimates_all, prop_estimates_all, count_estimates_all))
+# Prevalence separately
+row.names(prop_estimates_all) <- NULL
+write.csv(prop_estimates_all, file = "src/ACA_Database/RiskFactor estimates for ViseR_proportions.csv", row.names = FALSE)
+
+# Remaining
+estimates = do.call("rbind", list(rr_estimates_all, count_estimates_all)) # 36608
+
+# Round probs
+estimates$prob <- round(estimates$prob, 3)
 
 # Remove row headings
 row.names(estimates) <- NULL
 
+# Drop any rows with NAs
+estimates <- estimates %>% 
+  filter(!is.na(p50)) # 35536
+
+# Drop suppressed areas
+  s9_to_s5 <- function(x){paste0(str_sub(x, 1, 1), str_sub(x, start = -4))}
+  flt <- filter(summsa2all, rr_CV_b > 50 | N_persons < 100)
+  SA2_to_suppress <- split(flt$SA2, flt$model)
+  SA2_to_suppress <- lapply(SA2_to_suppress, s9_to_s5)
+  # Load original data
+  vise_sp <- split(estimates, estimates$sub_indicator_string)
+  names(vise_sp) <- c("smoking","diet", "activityleiswkpl","activityleis", "obese", "overweight","alcohol", "waist_circum")
+  # Loop through
+  ll <- list()
+  for(i in 1:8){
+    ll[[i]] <- vise_sp[[names(vise_sp)[i]]] %>% 
+      mutate(across(18:34, ~ ifelse(SA2_code %in% SA2_to_suppress[[names(vise_sp)[i]]], NA, .)))
+  }
+  estimates <- bind_rows(ll) %>% 
+    filter(!is.na(p50)) # 34824
+
 # Export
-write.csv(estimates, file = "src/ACA_Database/RiskFactor estimates for ViseR.csv", row.names = FALSE)
+write.csv(estimates, file = "src/ACA_Database/RiskFactor estimates for ViseR_withsuppression.csv", row.names = FALSE)
 
 ## National estimates ## -------------------------------------------------------
 
@@ -493,7 +519,7 @@ sub_indicator <- data.frame(sub_indicator_string = c("Current smoker", "Risky al
                             jamie_ind = c("smoking", "alcohol", "diet",
                                           "overweight", "obesity", "waist_circum",
                                           "activityleis", "activityleiswkpl"),
-                            sub_indicator_code = paste0("00", c(0,1,2,3,4,5,6,7)),
+                            sub_indicator_code = paste0("00", c(1,2,3,4,5,6,7,8)),
                             newCasesPerYear = rep(0.0, 8),
                             #summedCounts = rep(0.0, 8),
                             ratePer100k = rep(0.0, 8))
@@ -503,13 +529,13 @@ for(i in 1:nrow(sub_indicator)){
   if(sub_indicator$jamie_ind[i] == "waist_circum"){
     tot_pop <- sum(global_obj$census$N_persons_adults)
     #sub_indicator$summedCounts[i] = nat_count[[which(names(nat_count)==sub_indicator$jamie_ind[i])]]
-    sub_indicator$newCasesPerYear[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop
-    sub_indicator$ratePer100k[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100000
+    sub_indicator$newCasesPerYear[i] <- round(raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop)
+    sub_indicator$ratePer100k[i] <- round(raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100,1)
   }else{
     tot_pop <- sum(global_obj$census$N_persons)
     #sub_indicator$summedCounts[i] = nat_count[[which(names(nat_count)==sub_indicator$jamie_ind[i])]]
-    sub_indicator$newCasesPerYear[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop
-    sub_indicator$ratePer100k[i] <- raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100000
+    sub_indicator$newCasesPerYear[i] <- round(raw_est[[sub_indicator$jamie_ind[i]]]$national[1]*tot_pop)
+    sub_indicator$ratePer100k[i] <- round(raw_est[[sub_indicator$jamie_ind[i]]]$national[1] * 100,1)
   }
 }
 
@@ -526,10 +552,10 @@ Ref_national <- sub_indicator %>%
          model_code = "3",
          indicator_string = "Risk factors",
          indicator_code = "03",
-         measure_level_string = "Modelled number of people",
+         measure_level_string = "Modelled number of cases",
          measure_level_code = "04",
-         measure_code = "2",
-         measure_string = "Absolute",
+         measure_code = "1",
+         measure_string = "Relative",
          sub_sub_indicator_string = as.character(NA),
          sub_sub_indicator_code = as.character(NA),
          sex_string = "Persons",
