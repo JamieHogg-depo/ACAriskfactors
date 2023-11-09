@@ -205,6 +205,17 @@ jsave(filename = "fig8.jpeg",
       square = F, ratio = 9:6,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig8_500dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      scale = 1.67,
+      dpi = 500)
+jsave(filename = "fig8_300dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F, ratio = 9:6,
+      square_size = 1200,
+      dpi = 300)
 
 # ra - fill
 ec_ra %>% 

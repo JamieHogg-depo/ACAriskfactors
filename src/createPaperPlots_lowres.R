@@ -38,6 +38,17 @@ jsave(filename = "fig4.jpeg",
       square = F,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig4_300dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "fig4_500dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F,
+      square_size = 1200,
+      scale = 1.67,
+      dpi = 500)
   
 ## Scatter: Two-way SHA PHA vs ACA  - smoking and obesity - SA2 #### -----------
   
@@ -168,6 +179,13 @@ jsave(filename = "fig9.jpeg",
       square = T,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig9.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      plot = full_plt,
+      square = T,
+      square_size = 1200,
+      scale = 1.67,
+      dpi = 500)
 
 # cleanup
 rm(full_plt, sm_plt, ob_plt, sm, ob)
@@ -235,6 +253,12 @@ jsave(filename = "fig10.jpeg",
       square = F,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig10.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      square = F,
+      square_size = 1200,
+      scale = 1.67,
+      dpi = 500)
 
 ## Point estimate ranges ## ----------------------------------------------------
 

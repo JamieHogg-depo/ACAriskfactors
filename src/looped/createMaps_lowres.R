@@ -248,6 +248,19 @@ jsave(filename = "fig7.jpeg",
       ratio = c(9,6),
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig7_300dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      plot = sa2pha_joined, square = F,
+      ratio = c(9,6),
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "fig7_500dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      plot = sa2pha_joined, square = F,
+      ratio = c(9,6),
+      square_size = 1200,
+      scale = 1.67,
+      dpi = 500)
 
 # cleanup
 rm(base, base_boxes, llegend, base_legend, lay, sa2_full_inset_plt, pha_full_inset_plt, sa2pha_joined)
@@ -394,6 +407,17 @@ jsave(filename = "fig1.jpeg",
       plot = full_inset_plt, square = F,
       square_size = 1200,
       dpi = 300)
+jsave(filename = "fig1_300dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      plot = full_inset_plt, square = F,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "fig1_500dpi.tiff", 
+      base_folder = paste0(base_folder, "/paper"),
+      plot = full_inset_plt, square = F,
+      square_size = 1200,
+      scale = 1.67,
+      dpi = 500)
 
 # cleanup
 rm(base, base_boxes, lay, full_inset_plt)
@@ -1469,6 +1493,19 @@ if(rf == "activityleiswkpl"){
         ratio = c(9,6),
         square_size = 1200,
         dpi = 300)
+  jsave(filename = "fig6_300dpi.tiff", 
+        base_folder = paste0(base_folder, "/paper"),
+        plot = or_joined, square = F,
+        ratio = c(9,6),
+        square_size = 1200,
+        dpi = 300)
+  jsave(filename = "fig6_500dpi.tiff", 
+        base_folder = paste0(base_folder, "/paper"),
+        plot = or_joined, square = F,
+        ratio = c(9,6),
+        square_size = 1200,
+        scale = 1.67,
+        dpi = 500)
 }
 if(rf == "alcohol"){
   jsave(filename = "fig5.jpeg", 
@@ -1477,6 +1514,19 @@ if(rf == "alcohol"){
         ratio = c(9,6),
         square_size = 1200,
         dpi = 300)
+  jsave(filename = "fig5_300dpi.tiff", 
+        base_folder = paste0(base_folder, "/paper"),
+        plot = or_joined, square = F,
+        ratio = c(9,6),
+        square_size = 1200,
+        dpi = 300)
+  jsave(filename = "fig5_500dpi.tiff", 
+        base_folder = paste0(base_folder, "/paper"),
+        plot = or_joined, square = F,
+        ratio = c(9,6),
+        square_size = 1200,
+        scale = 1.67,
+        dpi = 500)
 }
 
 # cleanup
