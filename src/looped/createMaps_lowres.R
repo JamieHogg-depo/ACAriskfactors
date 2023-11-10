@@ -357,6 +357,7 @@ base <- map_sa2 %>%
   theme_void()+
   geom_sf(aes(fill = sampled), col = "black", size = 0.1)+
   scale_fill_manual(values = c("grey", "white"),
+                    na.value = "white",
                     breaks = c("Sampled", "Nonsampled"))+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
