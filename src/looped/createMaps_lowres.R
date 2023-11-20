@@ -1258,6 +1258,80 @@ jsave(filename = paste0("count_", rf ,".png"),
 rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
 message("---- Finished counts")
 
+## Counts - unique scale #### --------------------------------------------------
+
+# squish the top and lower 1 quantiles
+rar<- unname(quantile(modelled_est$summ$sa2$count_median, p = c(0.01,0.99), na.rm = T))
+
+# base map
+base <- modelled_est$summ$sa2_map %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = count_median), col = NA)+
+  scale_fill_viridis_c(begin = 0.3, end = 1, 
+                       direction = -1,
+                       option = "B", 
+                       limits = rar, 
+                       oob = squish)+
+  geom_sf(data = aus_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.2)+
+  geom_sf(data = state_border, aes(geometry = geometry), 
+          colour = "black", fill = NA, size = 0.1)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Modelled population count")+
+    guides(fill = guide_colourbar(barwidth = 13, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1:8){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1:8){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 5),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(9,1,1,1,1,2),
+             c(5,1,1,1,1,3),
+             c(6,1,1,1,1,8),
+             c(4,10,10,10,10,7))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob(rf_full,gp=gpar(fontsize=8)))
+
+# save plot
+jsave(filename = paste0("count_us_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/maps_lowres"),
+      plot = full_inset_plt, square = F,
+      square_size = 1200,
+      dpi = 300)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt)
+message("---- Finished counts - unique scale")
+
 ## LISA #### -------------------------------------------------------------------
 
 modelled_est$summ$sa2_map <- modelled_est$summ$sa2 %>% 
