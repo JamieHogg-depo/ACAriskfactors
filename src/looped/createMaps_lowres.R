@@ -266,6 +266,157 @@ jsave(filename = "fig7_500dpi.tiff",
 rm(base, base_boxes, llegend, base_legend, lay, sa2_full_inset_plt, pha_full_inset_plt, sa2pha_joined)
 message("---- Finished sa2pha joined")
 
+## SHAA estimates - obesity - qld ## -------------------------------------------
+
+# Load objects
+modelled_est <- readRDS("data/summary_files/obesity_b1.rds")
+pha_map <- suppressMessages(modelled_est$summ$sa2_map %>% 
+                              group_by(pha) %>% 
+                              summarise(geometry = st_union(geometry)))
+
+# some new datasets and objects
+pha_estimates <- SHA_pha %>% 
+  filter(!is.na(shaout_smoking_estimate)) %>% 
+  right_join(., pha_map) %>% 
+  mutate(median = shaout_obese_estimate) %>% 
+  st_as_sf()
+
+# squish the top and lower 2.5 quantiles
+rar<- unname(quantile(modelled_est$summ$sa2$mu_median, p = c(0.01,0.99), na.rm = T))
+
+# base map
+base <-pha_estimates %>% 
+  filter(str_sub(pha, 1,1)=="3") %>% 
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = median), col = NA)+
+  scale_fill_viridis_c(begin = 0, end = 1, 
+                       direction = -1,
+                       option = "F", 
+                       limits = rar, oob = squish)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Proportion")+
+    guides(fill = guide_colourbar(barwidth = 13, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1){
+  base_boxes <- base_boxes + 
+    addBoxLabel(1, color = "black", size = 0.2, textsize = 2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 5),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(1,2),
+             c(1,1),
+             c(3,3))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob("Obese (SHAA)",gp=gpar(fontsize=8)))
+
+# save object
+jsave(filename = paste0("qld_phamu_obesity.png"), 
+      base_folder = paste0(base_folder, "/maps_lowres"),
+      plot = full_inset_plt, square = F,
+      square_size = 1200,
+      dpi = 300)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt, pha_map, rar, pha_estimates)
+message("---- Finished SHAA obese - qld")
+
+## PREVALENCE - obesity - qld #### ---------------------------------------------
+
+# squish the top and lower 2.5 quantiles
+rar<- unname(quantile(modelled_est$summ$sa2$mu_median, p = c(0.01,0.99)))
+
+# base map
+base <- modelled_est$summ$sa2_map %>% 
+  filter(str_sub(SA2, 1,1)=="3") %>%
+  ggplot()+
+  theme_void()+
+  geom_sf(aes(fill = mu_median), col = NA)+
+  scale_fill_viridis_c(begin = 0, end = 1, 
+                       direction = -1,
+                       option = "F", 
+                       limits = rar, oob = squish)+
+  theme(legend.position = "none",
+        text = element_text(size = 8),
+        plot.title = element_text(margin = margin(0,0,2,0)),
+        plot.margin = unit(c(1,1,1,1), "mm"))
+
+# Base map with legend
+(base_legend <- base +
+    labs(fill = "Proportion")+
+    guides(fill = guide_colourbar(barwidth = 13, 
+                                  title.position = "top",
+                                  title.hjust = 0.5))+
+    theme(legend.position = "bottom"))
+llegend <- ggpubr::get_legend(base_legend)
+
+# Base map with boxes
+base_boxes <- base
+for(i in 1){
+  base_boxes <- base_boxes + 
+    addBoxLabel(i, color = "black", size = 0.2, textsize = 2)
+}
+
+# Create list of insets
+inset_list <- list()
+for(i in 1){
+  inset_list[[i]] <- base +
+    xlim(lims$xmin[i], lims$xmax[i]) +
+    ylim(lims$ymin[i], lims$ymax[i]) +
+    labs(title = lims$inset_labs[i])+
+    theme(panel.border = element_rect(colour = "black", size=1, fill=NA),
+          plot.title = element_text(margin = margin(0,0,2,0),
+                                    size = 5),
+          plot.margin = unit(c(1,1,1,1), "mm"))
+}
+inset_list <- Filter(Negate(is.null), inset_list)
+
+# create final list
+lay <- rbind(c(1,2),
+             c(1,1),
+             c(3,3))
+full_inset_plt <- arrangeGrob(grobs = c(list(base_boxes), inset_list, list(llegend)), 
+                              layout_matrix  = lay,
+                              top = textGrob("Obese", gp=gpar(fontsize=8)))
+
+# save object
+jsave(filename = paste0("qld_mu_obesity.png"), 
+      base_folder = paste0(base_folder, "/maps_lowres"),
+      plot = full_inset_plt, square = F,
+      square_size = 1200,
+      dpi = 300)
+
+# cleanup
+rm(base, base_boxes, llegend, base_legend, lay, full_inset_plt, modelled_est)
+message("---- Finished obesity prevalence - qld")
+
 ## Sydney Habour Cut Out - alcohol ## ------------------------------------------
 
 SyndeyCutOut <- data.frame(
