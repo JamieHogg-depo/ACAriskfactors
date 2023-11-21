@@ -327,7 +327,7 @@ jsave(filename = paste0("bar_lisastate_", rf ,".png"),
       square_size = 1200,
       dpi = 300)
 
-## Binned prevalence ## ------------------------------------------------
+## Binned prevalence ## --------------------------------------------------------
 
 # IRSD
 modelled_est$summ$sa2 %>% 
@@ -342,10 +342,8 @@ modelled_est$summ$sa2 %>%
        fill = "",
        title = rf_full)+
   theme(text = element_text(size = 8))
-
-# save object
 jsave(filename = paste0("binnedprev_irsd_", rf ,".png"), 
-      base_folder = paste0(base_folder, "/figures_lowres"),
+      base_folder = paste0(base_folder, "/figures_lowres/binnedprev"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -363,10 +361,50 @@ modelled_est$summ$sa2 %>%
        fill = "",
        title = rf_full)+
   theme(text = element_text(size = 8))
-
-# save object
 jsave(filename = paste0("binnedprev_ra_", rf ,".png"), 
-      base_folder = paste0(base_folder, "/figures_lowres"),
+      base_folder = paste0(base_folder, "/figures_lowres/binnedprev"),
+      square = F,
+      square_size = 1200,
+      dpi = 300)
+
+# QLD only - remoteness
+modelled_est$summ$sa2 %>% 
+  left_join(state_name_concor) %>% 
+  mutate(c = cut_number(mu_median, 10, labels = FALSE),
+         ra_sa2 = fct_relevel(ra_sa2, "Major Cities")) %>% 
+  filter(state_name_short == "QLD") %>% 
+  ggplot(aes(x = as.factor(c), fill = ra_sa2))+
+  theme_bw()+
+  geom_bar(position = "fill")+
+  addRemotenessColor()+
+  labs(y = "",
+       x = "Prevalence point estimates (Percentiles)",
+       fill = "",
+       title = rf_full)+
+  theme(text = element_text(size = 8))
+jsave(filename = paste0("qld_binnedprev_ra", rf ,".png"), 
+      base_folder = paste0(base_folder, "/figures_lowres/binnedprev"),
+      square = F,
+      square_size = 1200,
+      dpi = 300)
+
+# QLD only - IRSD
+modelled_est$summ$sa2 %>% 
+  left_join(state_name_concor) %>% 
+  left_join(.,irsd_5c, by = "ps_area") %>% 
+  mutate(c = cut_number(mu_median, 10, labels = FALSE)) %>% 
+  filter(state_name_short == "QLD") %>% 
+  ggplot(aes(x = as.factor(c), fill = irsd_5c))+
+  theme_bw()+
+  geom_bar(position = "fill")+
+  addIRSDColor()+
+  labs(y = "",
+       x = "Prevalence point estimates (Percentiles)",
+       fill = "",
+       title = rf_full)+
+  theme(text = element_text(size = 8))
+jsave(filename = paste0("qld_binnedprev_irsd_", rf ,".png"), 
+      base_folder = paste0(base_folder, "/figures_lowres/binnedprev"),
       square = F,
       square_size = 1200,
       dpi = 300)

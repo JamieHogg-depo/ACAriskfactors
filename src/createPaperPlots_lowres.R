@@ -425,4 +425,50 @@ jsave(filename = "rse vs pop.png",
       square_size = 1200,
       dpi = 300)
 
+## QLD vs National ## ----------------------------------------------------------
+
+# Write function to derive columns for direct estimate table
+column_of_direct <- function(i){
+  temp_list <- raw_est[[i]]
+  rf <- names(raw_est)[i]
+  
+  temp_data <- bind_rows(data.frame(state_name = "Australia", 
+                                    point = 100 * temp_list$national[1],
+                                    lower = 100 * (temp_list$national[1] - 1.96 * sqrt(temp_list$national[2])),
+                                    upper = 100 * (temp_list$national[1] + 1.96 * sqrt(temp_list$national[2]))),
+                         (left_join(temp_list$state, state_name_concor, by = "ps_state") %>% 
+                            filter(state_name_short == "QLD")) %>% 
+                           mutate(point = 100 * HT, 
+                                  lower = 100 * (HT - 1.96 * HT_SE),
+                                  upper = 100 * (HT + 1.96 * HT_SE)) %>% 
+                           dplyr::select(state_name, point, lower, upper)) %>% 
+    mutate(rf = rf)
+  
+  return(temp_data)
+}
+
+# Return all colunns and make large table
+ll <- bind_rows(lapply(1:8, column_of_direct))
+
+# create plot
+ll %>% 
+  mutate(rf = getRFFullNames(rf)) %>% 
+  ggplot(aes(x = point, xmin = lower, xmax = upper,
+             y = rf, col = state_name))+
+  theme_bw()+
+  geom_errorbar(position=position_dodge(width=0.5))+
+  geom_point(position=position_dodge(width=0.5))+
+  #geom_pointrange(position=position_dodge(width=0.5))+
+  labs(col = "",
+       x = "Prevalence (%)", 
+       y = "")+
+  theme(text = element_text(size = 8),
+        legend.position = "bottom")+
+  xlim(0,100)
+jsave(filename = "qld vs national direct.png", 
+      base_folder = paste0(base_folder, "/figures_lowres"),
+      square = F,
+      square_size = 1200,
+      dpi = 300)
+
 ## END SCRIPT #### -------------------------------------------------------------
