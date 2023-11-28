@@ -8,8 +8,8 @@ lookup <- data.frame(rf = names(raw_est),
                                  "Inadequate physical\nactivity (all)",
                                  "Risky alcohol\n consumption",
                                  "Inadequate diet",
-                                 "Obese",
-                                 "Overweight/obese",
+                                 "Obese\n(BMI >= 30)",
+                                 "Overweight/obese\n(BMI >= 25)",
                                  "Current smoking",
                                  "Risky waist\ncircumference"))
 
@@ -149,7 +149,7 @@ map_sa2 %>%
   theme_void()+
   geom_sf(fill = "white", col = "black")
 jsave(filename = "ccqoutloud_aus_empty.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -161,7 +161,7 @@ map_sa2 %>%
   geom_sf(col = "black")+
   theme(legend.position = "none")
 jsave(filename = "ccqoutloud_aus_filled.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -204,7 +204,7 @@ mapping_data %>%
         plot.margin = unit(c(1,1,1,1), "mm"))+
   facet_wrap(.~rf_full, nrow = 2)
 jsave(filename = "ccqoutloud_aus_or.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -228,7 +228,7 @@ mapping_data %>%
   geom_text(data = fl, aes(label = text, x = x, y = y), size = 2, inherit.aes = F)+
   facet_wrap(.~rf_full, nrow = 2)
 jsave(filename = "ccqoutloud_qld_or.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -251,12 +251,13 @@ mapping_data %>%
   theme(legend.position = "none",
         text = element_text(size = 8),
         plot.title = element_text(margin = margin(0,0,2,0)),
+        panel.border = element_rect(colour = "black", size=1, fill=NA),
         plot.margin = unit(c(1,1,1,1), "mm"))+
   xlim(lims$xmin[1], lims$xmax[1]) +
   ylim(lims$ymin[1], lims$ymax[1]) +
   facet_wrap(.~rf_full, nrow = 2)
 jsave(filename = "ccqoutloud_bne_or.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -281,7 +282,7 @@ summsa2all %>%
   theme(legend.position = "none")+
   coord_sf(ylim = c(-20,-10))
 jsave(filename = "ccqoutloud_highsmoking.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -313,7 +314,7 @@ mapping_data %>%
         plot.margin = unit(c(1,1,1,1), "mm"))+
   facet_wrap(.~rf_full, nrow = 2)
 jsave(filename = "ccqoutloud_qld_orep.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
@@ -334,12 +335,13 @@ mapping_data %>%
   theme(legend.position = "none",
         text = element_text(size = 8),
         plot.title = element_text(margin = margin(0,0,2,0)),
+        panel.border = element_rect(colour = "black", size=1, fill=NA),
         plot.margin = unit(c(1,1,1,1), "mm"))+
   xlim(lims$xmin[1], lims$xmax[1]) +
   ylim(lims$ymin[1], lims$ymax[1]) +
   facet_wrap(.~rf_full, nrow = 2)
 jsave(filename = "ccqoutloud_bne_orep.png", 
-      base_folder = paste0(base_folder, "/maps_lowres"),
+      base_folder = paste0(base_folder, "/maps_lowres/ccqoutloud"),
       square = F,
       square_size = 1200,
       dpi = 300)
