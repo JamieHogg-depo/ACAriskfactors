@@ -440,7 +440,8 @@ base <- map_sa2 %>%
   theme(legend.position = "none",
         text = element_text(size = 8),
         plot.title = element_text(margin = margin(0,0,2,0)),
-        plot.margin = unit(c(1,1,1,1), "mm"))
+        plot.margin = unit(c(1,1,1,1), "mm"))+
+  addIRSDColor()
 
 # Base map with legend
 (base_legend <- base +
