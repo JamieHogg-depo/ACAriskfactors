@@ -1,6 +1,6 @@
 # Mapping the prevalence of cancer risk factors at the small area level in Australia
 
-This repository contains the code and modelled results described in the manuscript "Mapping the prevalence of cancer risk factors at the small area level in Australia" by James Hogg, Jessica Cameron, Susanna Cramb, Peter Baade and Kerrie Mengersen.
+This repository contains the code and modelled results described in the manuscript "Mapping the prevalence of cancer risk factors at the small area level in Australia" by James Hogg, Jessica Cameron, Susanna Cramb, Peter Baade and Kerrie Mengersen. The published article is available [online](https://link.springer.com/article/10.1186/s12942-023-00352-5). 
 
 The modelled results are available in long-format upon request. This dataset contains the following columns.
 
