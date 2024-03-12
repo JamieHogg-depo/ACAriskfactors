@@ -4,7 +4,7 @@
 
 # Packages
 library(tidyverse)
-library(scales)
+#library(scales)
 library(sf)
 library(MASS)
 library(patchwork)

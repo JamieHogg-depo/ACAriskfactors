@@ -4,6 +4,8 @@
 
 source("src/ms.R")
 
+modelled_est_all <- lapply(1:8, FUN = function(x)readRDS(file = paste0("data/summary_files/", names(raw_est)[x], "_b1.rds")))
+
 ## START FOR LOOP #### ---------------------------------------------------------
 for(k in 1:8){
   
@@ -13,7 +15,8 @@ for(k in 1:8){
   m_s <- Sys.time()
   
   # load data
-  modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
+  modelled_est <- modelled_est_all[[k]]
+  #modelled_est <- readRDS(file = paste0("data/summary_files/", rf, "_b1.rds"))
 
 ## PREVALENCE #### -------------------------------------------------------------
 
@@ -22,14 +25,16 @@ rar<- unname(quantile(modelled_est$summ$sa2$mu_median, p = c(0.01,0.99)))
   
 # base map
 base <- modelled_est$summ$sa2_map %>% 
-  mutate(mu_median = ifelse(rr_CV_b > 50, NA, mu_median)) %>% 
+  mutate(suppressed = (rr_CV_b > 50 | N_persons < 100),
+         mu_median = ifelse(suppressed, NA, mu_median)) %>%
   ggplot()+
   theme_void()+
   geom_sf(aes(fill = mu_median), col = NA)+
   scale_fill_viridis_c(begin = 0, end = 1, 
                        direction = -1,
                        option = "F", 
-                       limits = rar, oob = squish)+
+                       limits = rar, oob = scales::squish)+
+  # JESS ADD: geom_fill_pattern(...)+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 
@@ -118,6 +123,7 @@ base <- mapping_data %>%
                        labels = as.character(round(Breaks.fill, 2)),
                        breaks = log2(Breaks.fill),
                        limits = range(Fill.values))+
+  # JESS ADD: geom_fill_pattern(...)+
   geom_sf(data = aus_border, aes(geometry = geometry), 
           colour = "black", fill = NA, size = 0.2)+
   geom_sf(data = state_border, aes(geometry = geometry), 

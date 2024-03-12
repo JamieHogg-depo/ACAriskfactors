@@ -474,20 +474,28 @@ names(nat_count) <- names(raw_est)
 
 # Prevalence separately
 row.names(prop_estimates_all) <- NULL
-write.csv(prop_estimates_all, file = "src/ACA_Database/RiskFactor estimates for ViseR_proportions.csv", row.names = FALSE)
+write.csv(prop_estimates_all, file = "src/ACA_Database/out/RFE_proportions.csv", row.names = FALSE)
+# each RF has 2288 rows and 34 columns
 
 # Remaining
-estimates = do.call("rbind", list(rr_estimates_all, count_estimates_all)) # 36608
+estimates = do.call("rbind", list(rr_estimates_all, count_estimates_all)) # nrow = 36,608
 
 # Round probs
 estimates$prob <- round(estimates$prob, 3)
 
-# Remove row headings
+# Remove row names
 row.names(estimates) <- NULL
 
 # Drop any rows with NAs
 estimates <- estimates %>% 
   filter(!is.na(p50)) # 35536
+
+# Export with all areas
+write.csv(estimates, file = "src/ACA_Database/out/RFE.csv", row.names = FALSE)
+
+# --------------------------------
+# Final format and export - suppression
+# --------------------------------
 
 # Drop suppressed areas
   s9_to_s5 <- function(x){paste0(str_sub(x, 1, 1), str_sub(x, start = -4))}
@@ -503,11 +511,11 @@ estimates <- estimates %>%
     ll[[i]] <- vise_sp[[names(vise_sp)[i]]] %>% 
       mutate(across(18:34, ~ ifelse(SA2_code %in% SA2_to_suppress[[names(vise_sp)[i]]], NA, .)))
   }
-  estimates <- bind_rows(ll) %>% 
-    filter(!is.na(p50)) # 34824
+  estimates_supp <- bind_rows(ll) %>% 
+    filter(!is.na(p50)) # nrow = 34,824
 
 # Export
-write.csv(estimates, file = "src/ACA_Database/RiskFactor estimates for ViseR_withsuppression.csv", row.names = FALSE)
+write.csv(estimates_supp, file = "src/ACA_Database/out/RFE_withsuppression.csv", row.names = FALSE)
 
 ## National estimates ## -------------------------------------------------------
 
@@ -575,6 +583,6 @@ Ref_national <- sub_indicator %>%
 row.names(Ref_national) <- NULL
 
 # Export
-write.csv(Ref_national, file = "src/ACA_Database/RiskFactor Aus for ViseR.csv", row.names = FALSE)
+write.csv(Ref_national, file = "src/ACA_Database/out/RFE_national.csv", row.names = FALSE)
 
 ## SCRIPT END ## ---------------------------------------------------------------
