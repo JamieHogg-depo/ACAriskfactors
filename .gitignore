@@ -8,4 +8,5 @@ out/
 *.pdf
 *.url
 *.csv
+*.Rdata
 ModelledEstimates.csv
